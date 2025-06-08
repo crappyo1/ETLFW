@@ -661,7 +661,7 @@
 															"enableStaging": false,
 															"validateDataConsistency": false,
 															"translator": {
-																"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
+																"value": "@json(activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT)",
 																"type": "Expression"
 															}
 														},
@@ -839,7 +839,7 @@
 															"enableStaging": false,
 															"validateDataConsistency": false,
 															"translator": {
-																"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
+																"value": "@json(item().CopyActivitySettings).translator",
 																"type": "Expression"
 															}
 														},
@@ -1014,7 +1014,7 @@
 													"enableStaging": false,
 													"validateDataConsistency": false,
 													"translator": {
-														"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
+														"value": "@json(item().CopyActivitySettings).translator",
 														"type": "Expression"
 													}
 												},
@@ -1170,7 +1170,10 @@
 											"storedProcedureParameters": {
 												"MappingId": {
 													"type": "Int32",
-													"value": "@item().MappingId"
+													"value": {
+														"value": "@item().MappingId",
+														"type": "Expression"
+													}
 												}
 											},
 											"queryTimeout": "02:00:00",
