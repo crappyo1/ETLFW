@@ -539,26 +539,6 @@
 																}
 															}
 														]
-													},
-													{
-														"name": "MappingFail_2",
-														"type": "Fail",
-														"dependsOn": [
-															{
-																"activity": "FullLoadOneObject",
-																"dependencyConditions": [
-																	"Failed"
-																]
-															}
-														],
-														"userProperties": [],
-														"typeProperties": {
-															"message": {
-																"value": "@activity('FullLoadOneObject').output.value",
-																"type": "Expression"
-															},
-															"errorCode": "1"
-														}
 													}
 												]
 											},
@@ -780,26 +760,6 @@
 															"referenceName": "Metadata_LS",
 															"type": "LinkedServiceReference"
 														}
-													},
-													{
-														"name": "MappingFail_3",
-														"type": "Fail",
-														"dependsOn": [
-															{
-																"activity": "DeltaLoadOneObject",
-																"dependencyConditions": [
-																	"Failed"
-																]
-															}
-														],
-														"userProperties": [],
-														"typeProperties": {
-															"message": {
-																"value": "@activity('DeltaLoadOneObject').output.value",
-																"type": "Expression"
-															},
-															"errorCode": "1"
-														}
 													}
 												]
 											}
@@ -932,26 +892,6 @@
 														}
 													}
 												]
-											},
-											{
-												"name": "MappingFail_1",
-												"type": "Fail",
-												"dependsOn": [
-													{
-														"activity": "DefaultFullLoadOneObject",
-														"dependencyConditions": [
-															"Failed"
-														]
-													}
-												],
-												"userProperties": [],
-												"typeProperties": {
-													"message": {
-														"value": "@activity('DefaultFullLoadOneObject').output.value",
-														"type": "Expression"
-													},
-													"errorCode": "1"
-												}
 											}
 										]
 									}
