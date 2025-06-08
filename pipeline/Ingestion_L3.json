@@ -128,7 +128,7 @@
 													"enableStaging": false,
 													"validateDataConsistency": false,
 													"translator": {
-														"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
+														"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            ',\n            \"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
 														"type": "Expression"
 													}
 												},
@@ -326,7 +326,7 @@
 													"enableStaging": false,
 													"validateDataConsistency": false,
 													"translator": {
-														"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
+														"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            ',\n            \"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
 														"type": "Expression"
 													}
 												},
@@ -521,7 +521,7 @@
 											"enableStaging": false,
 											"validateDataConsistency": false,
 											"translator": {
-												"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
+												"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            ',\n            \"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
 												"type": "Expression"
 											}
 										},
