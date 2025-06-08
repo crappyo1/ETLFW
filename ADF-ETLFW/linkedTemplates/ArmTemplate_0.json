@@ -661,7 +661,7 @@
 															"enableStaging": false,
 															"validateDataConsistency": false,
 															"translator": {
-																"value": "@json(activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT)",
+																"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
 																"type": "Expression"
 															}
 														},
@@ -839,7 +839,7 @@
 															"enableStaging": false,
 															"validateDataConsistency": false,
 															"translator": {
-																"value": "@json(item().CopyActivitySettings).translator",
+																"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
 																"type": "Expression"
 															}
 														},
@@ -1014,7 +1014,7 @@
 													"enableStaging": false,
 													"validateDataConsistency": false,
 													"translator": {
-														"value": "@json(item().CopyActivitySettings).translator",
+														"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
 														"type": "Expression"
 													}
 												},
