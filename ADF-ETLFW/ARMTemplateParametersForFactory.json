@@ -1,0 +1,84 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "ADF-ETLFW"
+		},
+		"AWLT_password": {
+			"value": ""
+		},
+		"AWLT_LS_password": {
+			"value": ""
+		},
+		"BRONZE_LS_password": {
+			"value": ""
+		},
+		"DEST_LS_password": {
+			"value": ""
+		},
+		"Metadata_LS_password": {
+			"value": ""
+		},
+		"SourceServer_password": {
+			"value": ""
+		},
+		"AWLT_properties_typeProperties_server": {
+			"value": "as1src.database.windows.net"
+		},
+		"AWLT_properties_typeProperties_database": {
+			"value": "AdventureWorksLT"
+		},
+		"AWLT_properties_typeProperties_userName": {
+			"value": "as1src"
+		},
+		"AWLT_LS_properties_typeProperties_server": {
+			"value": "as1src.database.windows.net"
+		},
+		"AWLT_LS_properties_typeProperties_database": {
+			"value": "AdventureWorksLT"
+		},
+		"AWLT_LS_properties_typeProperties_userName": {
+			"value": "as1src"
+		},
+		"BRONZE_LS_properties_typeProperties_server": {
+			"value": "as1src.database.windows.net"
+		},
+		"BRONZE_LS_properties_typeProperties_database": {
+			"value": "BRONZE"
+		},
+		"BRONZE_LS_properties_typeProperties_userName": {
+			"value": "as1src"
+		},
+		"DEST_LS_properties_typeProperties_server": {
+			"value": "as1src.database.windows.net"
+		},
+		"DEST_LS_properties_typeProperties_database": {
+			"value": "DEST"
+		},
+		"DEST_LS_properties_typeProperties_userName": {
+			"value": "as1src"
+		},
+		"LakeStore_LS_properties_typeProperties_url": {
+			"value": "https://lakestore.dfs.core.windows.net/"
+		},
+		"Metadata_LS_properties_typeProperties_server": {
+			"value": "as1src.database.windows.net"
+		},
+		"Metadata_LS_properties_typeProperties_database": {
+			"value": "MetaData"
+		},
+		"Metadata_LS_properties_typeProperties_userName": {
+			"value": "as1src"
+		},
+		"SourceServer_properties_typeProperties_server": {
+			"value": "as1src.database.windows.net"
+		},
+		"SourceServer_properties_typeProperties_database": {
+			"value": "SRC"
+		},
+		"SourceServer_properties_typeProperties_userName": {
+			"value": "as1src"
+		}
+	}
+}
