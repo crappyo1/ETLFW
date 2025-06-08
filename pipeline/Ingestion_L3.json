@@ -593,7 +593,7 @@
 									},
 									"ErrorMessage": {
 										"value": {
-											"value": "@activity('RouteJobsBasedOnLoadingBehavior').output",
+											"value": "@activity('RouteJobsBasedOnLoadingBehavior').output.value",
 											"type": "Expression"
 										},
 										"type": "String"
