@@ -34,7 +34,15 @@ CREATE PROCEDURE [Control].[GetColumnMapping]
   @MappingId [int] 
 AS
 BEGIN
-    DECLARE @JSON_CONSTRUCT varchar(MAX) = '{ "type": "TabularTranslator", "mappings": {X} }';
+    -- DECLARE @JSON_CONSTRUCT varchar(MAX) = '{ 
+    --     "type": "TabularTranslator", 
+    --     "mappings": {X},
+    --     "typeConversion": true,
+    --     "typeConversionSettings": {
+    --         "allowDataTruncation": true,
+    --         "treatBooleanAsNumber": false
+    --     }
+    -- }';
     DECLARE @JSON_MAPPING VARCHAR(MAX);
 
     SET @JSON_MAPPING = (
@@ -50,6 +58,27 @@ BEGIN
         FOR JSON PATH
     );
 
-    SELECT REPLACE(@JSON_CONSTRUCT, '{X}', @JSON_MAPPING) AS JSON_OUTPUT;
+    -- SELECT REPLACE(@JSON_CONSTRUCT, '{X}', @JSON_MAPPING) AS JSON_OUTPUT;
+    SELECT @JSON_MAPPING AS JSON_OUTPUT;
 END
 GO
+
+--@json(item().CopyActivitySettings).translator
+
+/*
+@json(
+    concat(
+        '{
+            "type": "TabularTranslator",
+            "mappings": ',    
+            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,
+            ',
+            "typeConversion": true,
+            "typeConversionSettings": {
+                "allowDataTruncation": true,
+                "treatBooleanAsNumber": false
+            }
+        }'
+    )
+)
+*/

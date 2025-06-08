@@ -18,6 +18,7 @@ CREATE TABLE [Control].[Task](
 	[TopLevelPipelineName] [varchar](max) NULL,
 	[TriggerName] [nvarchar](max) NULL,
 	[DataLoadingBehaviorSettings] [nvarchar](max) NULL,
+    [MappingId] [int] NULL,
 	-- [TaskId] [int] NULL,
     [GroupId] [int] NULL,
 	[CopyEnabled] [bit] NULL
@@ -201,6 +202,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": "DateTime",
             "watermarkColumnStartValue": "2006-06-01T00:00:00.000Z"
         },
+        "MappingId": 1,
         "GroupId": 0,
         "CopyEnabled": 1
     },
@@ -429,6 +431,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": null,
             "watermarkColumnStartValue": null
         },
+        "MappingId": 2,
         "GroupId": 0,
         "CopyEnabled": 1
     },
@@ -543,6 +546,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": "DateTime",
             "watermarkColumnStartValue": "2006-06-01T00:00:00.000Z"
         },
+        "MappingId": 3,
         "GroupId": 0,
         "CopyEnabled": 1
     }
@@ -562,6 +566,7 @@ INSERT INTO [Control].[Task] (
     [TopLevelPipelineName],
     [TriggerName],
     [DataLoadingBehaviorSettings],
+    [MappingId],
     -- [TaskId],
     [GroupId],
     [CopyEnabled])
@@ -578,6 +583,7 @@ SELECT
     TaskData.[TopLevelPipelineName],
     TaskData.[TriggerName],
     TaskData.[DataLoadingBehaviorSettings],
+    TaskData.[MappingId],
     -- TaskData.[TaskId],
     TaskData.[GroupId],
     TaskData.[CopyEnabled]
@@ -596,6 +602,7 @@ WITH (
     [TopLevelPipelineName] [varchar](max),
     [TriggerName] [nvarchar](max) AS JSON,
     [DataLoadingBehaviorSettings] [nvarchar](max) AS JSON,
+    [MappingId] [int],
     -- [TaskId] [int],
     [GroupId] [int],
     [CopyEnabled] [bit]
