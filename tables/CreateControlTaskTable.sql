@@ -19,7 +19,7 @@ CREATE TABLE [Control].[Task](
 	[TriggerName] [nvarchar](max) NULL,
 	[DataLoadingBehaviorSettings] [nvarchar](max) NULL,
 	-- [TaskId] [int] NULL,
-    [SeqId] [int] NULL,
+    [GroupId] [int] NULL,
 	[CopyEnabled] [bit] NULL
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
@@ -201,7 +201,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": "DateTime",
             "watermarkColumnStartValue": "2006-06-01T00:00:00.000Z"
         },
-        "SeqId": 0,
+        "GroupId": 0,
         "CopyEnabled": 1
     },
     {
@@ -429,7 +429,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": null,
             "watermarkColumnStartValue": null
         },
-        "SeqId": 0,
+        "GroupId": 0,
         "CopyEnabled": 1
     },
     {
@@ -543,7 +543,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": "DateTime",
             "watermarkColumnStartValue": "2006-06-01T00:00:00.000Z"
         },
-        "SeqId": 0,
+        "GroupId": 0,
         "CopyEnabled": 1
     }
 ]';
@@ -563,7 +563,7 @@ INSERT INTO [Control].[Task] (
     [TriggerName],
     [DataLoadingBehaviorSettings],
     -- [TaskId],
-    [SeqId],
+    [GroupId],
     [CopyEnabled])
 SELECT
     -- TaskData.[SourceObjectSettings],    
@@ -579,7 +579,7 @@ SELECT
     TaskData.[TriggerName],
     TaskData.[DataLoadingBehaviorSettings],
     -- TaskData.[TaskId],
-    TaskData.[SeqId],
+    TaskData.[GroupId],
     TaskData.[CopyEnabled]
 
 FROM OPENJSON(@TaskMetadata)
@@ -597,7 +597,7 @@ WITH (
     [TriggerName] [nvarchar](max) AS JSON,
     [DataLoadingBehaviorSettings] [nvarchar](max) AS JSON,
     -- [TaskId] [int],
-    [SeqId] [int],
+    [GroupId] [int],
     [CopyEnabled] [bit]
 ) AS TaskData
 LEFT JOIN [Control].[SourceObject] AS SrcO ON SrcO.[Name] = TaskData.[SourceName]

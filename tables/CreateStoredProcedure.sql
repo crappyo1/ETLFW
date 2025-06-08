@@ -24,5 +24,5 @@ CREATE PROCEDURE [Control].[InsertTaskStatus]
     @Status [int],
     @ErrorMessage nvarchar(max)
 AS
-    INSERT INTO [Control].[TaskStatus] VALUES (@TaskId, @Status, @ErrorMessage, GETDATE())    
+    INSERT INTO [Control].[TaskStatus] VALUES (@TaskId, @Status, @ErrorMessage, (GETDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Singapore Standard Time'))
 GO
