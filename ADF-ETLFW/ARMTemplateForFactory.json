@@ -394,7 +394,14 @@
 									"name": "RouteJobsBasedOnLoadingBehavior",
 									"description": "Check the loading behavior for each object if it requires full load or incremental load. If it is Default or FullLoad case, do full load. If it is DeltaLoad case, do incremental load.",
 									"type": "Switch",
-									"dependsOn": [],
+									"dependsOn": [
+										{
+											"activity": "GetObjectColumnMapping",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
 									"userProperties": [],
 									"typeProperties": {
 										"on": {
@@ -849,7 +856,7 @@
 													"enableStaging": false,
 													"validateDataConsistency": false,
 													"translator": {
-														"value": "@json(item().CopyActivitySettings).translator",
+														"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow,\n            '\"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
 														"type": "Expression"
 													}
 												},
@@ -942,6 +949,12 @@
 											"dependencyConditions": [
 												"Failed"
 											]
+										},
+										{
+											"activity": "GetObjectColumnMapping",
+											"dependencyConditions": [
+												"Failed"
+											]
 										}
 									],
 									"policy": {
@@ -968,7 +981,7 @@
 											},
 											"ErrorMessage": {
 												"value": {
-													"value": "@activity('RouteJobsBasedOnLoadingBehavior').output",
+													"value": "@activity('RouteJobsBasedOnLoadingBehavior').output.value",
 													"type": "Expression"
 												},
 												"type": "String"
@@ -978,6 +991,38 @@
 									"linkedServiceName": {
 										"referenceName": "Metadata_LS",
 										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "GetObjectColumnMapping",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderStoredProcedureName": "[[Control].[GetColumnMapping]",
+											"storedProcedureParameters": {
+												"MappingId": {
+													"type": "Int32",
+													"value": "@item().MappingId"
+												}
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "MetadataDS",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
 									}
 								}
 							]
@@ -1000,6 +1045,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Metadata_LS')]",
+				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
 				"[concat(variables('factoryId'), '/datasets/IngestionSourceDS')]",
 				"[concat(variables('factoryId'), '/datasets/IngestionBronzeDS')]"
 			]
