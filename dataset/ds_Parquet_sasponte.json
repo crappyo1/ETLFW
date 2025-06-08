@@ -1,0 +1,53 @@
+{
+	"name": "ds_Parquet_sasponte",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LakeStore_LS",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"URL": {
+				"type": "string",
+				"defaultValue": "https://saspontedev.dfs.core.windows.net"
+			},
+			"SecretName": {
+				"type": "string",
+				"defaultValue": "saspontedev-ak"
+			},
+			"FileSystem": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"Directory": {
+				"type": "string",
+				"defaultValue": "connection_test"
+			},
+			"File": {
+				"type": "string",
+				"defaultValue": "file.parquet"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().File",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().Directory",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().FileSystem",
+					"type": "Expression"
+				}
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

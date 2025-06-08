@@ -1,0 +1,9 @@
+{
+	"name": "ADF-ETLFW",
+	"location": "southeastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "0995e761-0d60-4147-b327-4ce561754c1b",
+		"tenantId": "3b2e664b-c7cf-4f63-8352-1aa18c9e4728"
+	}
+}

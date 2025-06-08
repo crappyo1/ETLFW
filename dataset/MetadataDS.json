@@ -1,0 +1,20 @@
+{
+	"name": "MetadataDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Metadata_LS",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ETLFWDS"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "Control",
+			"table": "MainControl"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
