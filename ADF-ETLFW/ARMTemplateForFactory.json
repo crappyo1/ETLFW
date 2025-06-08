@@ -888,6 +888,97 @@
 											}
 										]
 									}
+								},
+								{
+									"name": "InsertTaskSucceedStatus",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "RouteJobsBasedOnLoadingBehavior",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[Control].[InsertTaskStatus]",
+										"storedProcedureParameters": {
+											"TaskId": {
+												"value": {
+													"value": "@item().Id",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Status": {
+												"value": "1",
+												"type": "Int16"
+											},
+											"ErrorMessage": {
+												"value": "",
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "Metadata_LS",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "InsertTaskFailStatus",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "RouteJobsBasedOnLoadingBehavior",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[Control].[InsertTaskStatus]",
+										"storedProcedureParameters": {
+											"TaskId": {
+												"value": {
+													"value": "@item().Id",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Status": {
+												"value": "0",
+												"type": "Int16"
+											},
+											"ErrorMessage": {
+												"value": {
+													"value": "@activity('RouteJobsBasedOnLoadingBehavior').output",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "Metadata_LS",
+										"type": "LinkedServiceReference"
+									}
 								}
 							]
 						}
@@ -908,9 +999,9 @@
 				"lastPublishTime": "2025-06-07T14:15:22Z"
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Metadata_LS')]",
 				"[concat(variables('factoryId'), '/datasets/IngestionSourceDS')]",
-				"[concat(variables('factoryId'), '/datasets/IngestionBronzeDS')]",
-				"[concat(variables('factoryId'), '/linkedServices/Metadata_LS')]"
+				"[concat(variables('factoryId'), '/datasets/IngestionBronzeDS')]"
 			]
 		},
 		{
