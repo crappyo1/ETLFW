@@ -15,10 +15,9 @@ AS
     SET [DataLoadingBehaviorSettings]=JSON_MODIFY([DataLoadingBehaviorSettings],'$.watermarkColumnStartValue', @watermarkColumnStartValue) WHERE Id = @Id
 GO
 
-
+/****** Object: StoredProcedure [Control].[InsertTaskStatus] ******/
 DROP PROCEDURE IF EXISTS [Control].[InsertTaskStatus]
 GO
-/****** Object: StoredProcedure [Control].[InsertTaskStatus] ******/
 CREATE PROCEDURE [Control].[InsertTaskStatus]
     @TaskId [int],
     @Status [int],
@@ -27,7 +26,36 @@ AS
     INSERT INTO [Control].[TaskStatus] VALUES (@TaskId, @Status, @ErrorMessage, (GETDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Singapore Standard Time'))
 GO
 
+/****** Object: StoredProcedure [Control].[GetColumnMapping] ******/    
+/*
+    This procedure retrieves the column mapping for a given MappingId.
+    It constructs a JSON object that represents the mapping between source and target columns.
+    The JSON output can be used in data transformation tasks, such as in Azure Data Factory.
 
+    Initial mapping configuration stores the whole JSON construct within a database column.
+    The content is converted into a JSON object utilizing an expression when configuring a
+    Copy Data activity in Azure Data Factory.
+
+    Original expression:
+        @json(item().CopyActivitySettings).translator
+
+    New expression to be used in the Copy Data activity:
+    @json(
+        concat(
+            '{
+                "type": "TabularTranslator",
+                "mappings": ',    
+                activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,
+                ',
+                "typeConversion": true,
+                "typeConversionSettings": {
+                    "allowDataTruncation": true,
+                    "treatBooleanAsNumber": false
+                }
+            }'
+        )
+    )
+*/ 
 DROP PROCEDURE IF EXISTS [Control].[GetColumnMapping]
 GO
 CREATE PROCEDURE [Control].[GetColumnMapping]
@@ -62,23 +90,3 @@ BEGIN
     SELECT @JSON_MAPPING AS JSON_OUTPUT;
 END
 GO
-
---@json(item().CopyActivitySettings).translator
-
-/*
-@json(
-    concat(
-        '{
-            "type": "TabularTranslator",
-            "mappings": ',    
-            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,
-            ',
-            "typeConversion": true,
-            "typeConversionSettings": {
-                "allowDataTruncation": true,
-                "treatBooleanAsNumber": false
-            }
-        }'
-    )
-)
-*/
