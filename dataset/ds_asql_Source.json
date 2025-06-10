@@ -1,0 +1,30 @@
+{
+	"name": "ds_asql_Source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AWLT_LS",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"SchemaName": {
+				"type": "string"
+			},
+			"ObjectName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().SchemaName",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().ObjectName",
+				"type": "Expression"
+			}
+		}
+	}
+}

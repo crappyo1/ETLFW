@@ -97,7 +97,7 @@
 															"type": "Expression"
 														},
 														"preCopyScript": {
-															"value": "@json(item().CopySinkSettings).preCopyScript",
+															"value": "@{json(item().CopySinkSettings).preCopyScript}",
 															"type": "Expression"
 														},
 														"maxConcurrentConnections": {
@@ -117,7 +117,7 @@
 															"type": "Expression"
 														},
 														"tableOption": {
-															"value": "@json(item().CopySinkSettings).tableOption",
+															"value": "@{json(item().CopySinkSettings).tableOption}",
 															"type": "Expression"
 														},
 														"disableMetricsCollection": {
@@ -134,7 +134,7 @@
 												},
 												"inputs": [
 													{
-														"referenceName": "dds_asql_Source",
+														"referenceName": "ds_asql_Source",
 														"type": "DatasetReference",
 														"parameters": {
 															"SchemaName": {
@@ -150,7 +150,7 @@
 												],
 												"outputs": [
 													{
-														"referenceName": "dds_asql_Bronze",
+														"referenceName": "ds_asql_Bronze",
 														"type": "DatasetReference",
 														"parameters": {
 															"SchemaName": {
@@ -275,7 +275,7 @@
 															"type": "Expression"
 														},
 														"preCopyScript": {
-															"value": "@json(item().CopySinkSettings).preCopyScript",
+															"value": "@{json(item().CopySinkSettings).preCopyScript}",
 															"type": "Expression"
 														},
 														"maxConcurrentConnections": {
@@ -295,7 +295,7 @@
 															"type": "Expression"
 														},
 														"tableOption": {
-															"value": "@json(item().CopySinkSettings).tableOption",
+															"value": "@{json(item().CopySinkSettings).tableOption}",
 															"type": "Expression"
 														},
 														"disableMetricsCollection": {
@@ -312,13 +312,10 @@
 												},
 												"inputs": [
 													{
-														"referenceName": "dds_asql_Source",
+														"referenceName": "ds_asql_Source",
 														"type": "DatasetReference",
 														"parameters": {
-															"SchemaName": {
-																"value": "@item().SourceSchemaName",
-																"type": "Expression"
-															},
+															"SchemaName": "@item().SourceSchemaName",
 															"ObjectName": {
 																"value": "@item().SourceObjectName",
 																"type": "Expression"
@@ -328,7 +325,7 @@
 												],
 												"outputs": [
 													{
-														"referenceName": "dds_asql_Bronze",
+														"referenceName": "ds_asql_Bronze",
 														"type": "DatasetReference",
 														"parameters": {
 															"SchemaName": {
@@ -450,7 +447,7 @@
 													"type": "Expression"
 												},
 												"preCopyScript": {
-													"value": "@json(item().CopySinkSettings).preCopyScript",
+													"value": "@{json(item().CopySinkSettings).preCopyScript}",
 													"type": "Expression"
 												},
 												"maxConcurrentConnections": {
@@ -470,7 +467,7 @@
 													"type": "Expression"
 												},
 												"tableOption": {
-													"value": "@json(item().CopySinkSettings).tableOption",
+													"value": "@{json(item().CopySinkSettings).tableOption}",
 													"type": "Expression"
 												},
 												"disableMetricsCollection": {
@@ -487,7 +484,7 @@
 										},
 										"inputs": [
 											{
-												"referenceName": "dds_asql_Source",
+												"referenceName": "ds_asql_Source",
 												"type": "DatasetReference",
 												"parameters": {
 													"SchemaName": {
@@ -503,13 +500,10 @@
 										],
 										"outputs": [
 											{
-												"referenceName": "dds_asql_Bronze",
+												"referenceName": "ds_asql_Bronze",
 												"type": "DatasetReference",
 												"parameters": {
-													"SchemaName": {
-														"value": "@item().SinkSchemaName",
-														"type": "Expression"
-													},
+													"SchemaName": "@item().SinkSchemaName",
 													"ObjectName": {
 														"value": "@item().SinkObjectName",
 														"type": "Expression"
