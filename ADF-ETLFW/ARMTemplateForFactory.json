@@ -7,10 +7,6 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "ADF-ETLFW"
 		},
-		"AWLT_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'AWLT'"
-		},
 		"AWLT_LS_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'AWLT_LS'"
@@ -19,29 +15,9 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'BRONZE_LS'"
 		},
-		"DEST_LS_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'DEST_LS'"
-		},
 		"Metadata_LS_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'Metadata_LS'"
-		},
-		"SourceServer_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'SourceServer'"
-		},
-		"AWLT_properties_typeProperties_server": {
-			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
-		},
-		"AWLT_properties_typeProperties_database": {
-			"type": "string",
-			"defaultValue": "AdventureWorksLT"
-		},
-		"AWLT_properties_typeProperties_userName": {
-			"type": "string",
-			"defaultValue": "as1src"
 		},
 		"AWLT_LS_properties_typeProperties_server": {
 			"type": "string",
@@ -67,18 +43,6 @@
 			"type": "string",
 			"defaultValue": "as1src"
 		},
-		"DEST_LS_properties_typeProperties_server": {
-			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
-		},
-		"DEST_LS_properties_typeProperties_database": {
-			"type": "string",
-			"defaultValue": "DEST"
-		},
-		"DEST_LS_properties_typeProperties_userName": {
-			"type": "string",
-			"defaultValue": "as1src"
-		},
 		"LakeStore_LS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://lakestore.dfs.core.windows.net/"
@@ -95,17 +59,17 @@
 			"type": "string",
 			"defaultValue": "as1src"
 		},
-		"SourceServer_properties_typeProperties_server": {
+		"dls_asql_Bronze_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
+			"defaultValue": "@{linkedService().ServerName}"
 		},
-		"SourceServer_properties_typeProperties_database": {
+		"dls_asql_Bronze_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "SRC"
+			"defaultValue": "@{linkedService().DatabaseName}"
 		},
-		"SourceServer_properties_typeProperties_userName": {
+		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
-			"defaultValue": "as1src"
+			"defaultValue": "@{linkedService().UserName}"
 		}
 	},
 	"variables": {
@@ -114,265 +78,6 @@
 	"resources": [
 		{
 			"name": "[concat(parameters('factoryName'), '/Ingestion_L1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "This pipeline will count the total number of objects (tables etc.) required to be copied in this run, come up with the number of sequential batches based on the max allowed concurrent copy task, and then execute another pipeline to copy different batches sequentially.",
-				"activities": [
-					{
-						"name": "GetSumOfObjectsToCopy",
-						"description": "Count the total number of objects (tables etc.) required to be copied in this run.",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT count(*) as count FROM @{pipeline().parameters.MainControlTableName} where TopLevelPipelineName='@{pipeline().Pipeline}' and TriggerName like '%@{pipeline().TriggerName}%' and CopyEnabled = 1",
-									"type": "Expression"
-								},
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "MetadataDS",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						}
-					},
-					{
-						"name": "CopyBatchesOfObjectsSequentially",
-						"description": "Come up with the number of sequential batches based on the max allowed concurrent copy tasks, and then execute another pipeline to copy different batches sequentially.",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetSumOfObjectsToCopy",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@range(0, add(div(activity('GetSumOfObjectsToCopy').output.firstRow.count,\n                    pipeline().parameters.MaxNumberOfConcurrentTasks),\n                    if(equals(mod(activity('GetSumOfObjectsToCopy').output.firstRow.count,\n                    pipeline().parameters.MaxNumberOfConcurrentTasks), 0), 0, 1)))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "CopyObjectsInOneBatch",
-									"description": "Execute another pipeline to copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "Ingestion_L2",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"MaxNumberOfObjectsReturnedFromLookupActivity": {
-												"value": "@pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity",
-												"type": "Expression"
-											},
-											"TopLevelPipelineName": {
-												"value": "@{pipeline().Pipeline}",
-												"type": "Expression"
-											},
-											"TriggerName": {
-												"value": "@{pipeline().TriggerName}",
-												"type": "Expression"
-											},
-											"CurrentSequentialNumberOfBatch": {
-												"value": "@item()",
-												"type": "Expression"
-											},
-											"SumOfObjectsToCopy": {
-												"value": "@activity('GetSumOfObjectsToCopy').output.firstRow.count",
-												"type": "Expression"
-											},
-											"SumOfObjectsToCopyForCurrentBatch": {
-												"value": "@min(pipeline().parameters.MaxNumberOfConcurrentTasks, activity('GetSumOfObjectsToCopy').output.firstRow.count)",
-												"type": "Expression"
-											},
-											"MainControlTableName": {
-												"value": "@pipeline().parameters.MainControlTableName",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"MaxNumberOfObjectsReturnedFromLookupActivity": {
-						"type": "Int",
-						"defaultValue": 5000
-					},
-					"MaxNumberOfConcurrentTasks": {
-						"type": "Int",
-						"defaultValue": 20
-					},
-					"MainControlTableName": {
-						"type": "String",
-						"defaultValue": "Control.Task_VW"
-					}
-				},
-				"folder": {
-					"name": "Ingestion"
-				},
-				"annotations": [
-					"MetadataDrivenSolution"
-				],
-				"lastPublishTime": "2025-06-08T04:19:47Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
-				"[concat(variables('factoryId'), '/pipelines/Ingestion_L2')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Ingestion_L2')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "This pipeline will copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
-				"activities": [
-					{
-						"name": "DivideOneBatchIntoMultipleGroups",
-						"description": "Divide objects from single batch into multiple sub parallel groups to avoid reaching the output limit of lookup activity.",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@range(0, add(div(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                    if(equals(mod(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), 0), 0, 1)))",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 50,
-							"activities": [
-								{
-									"name": "GetObjectsPerGroupToCopy",
-									"description": "Get objects (tables etc.) from control table required to be copied in this group. The order of objects to be copied following the TaskId in control table (ORDER BY [TaskId] DESC).",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "AzureSqlSource",
-											"sqlReaderQuery": {
-												"value": "WITH OrderedControlTable AS (\n                             SELECT *, ROW_NUMBER() OVER (ORDER BY [GroupId], [Id] DESC) AS RowNumber\n                             FROM @{pipeline().parameters.MainControlTableName}\n                             where TopLevelPipelineName = '@{pipeline().parameters.TopLevelPipelineName}'\n                             and TriggerName like '%@{pipeline().parameters.TriggerName}%' and CopyEnabled = 1)\n                             SELECT * FROM OrderedControlTable WHERE RowNumber BETWEEN @{add(mul(int(item()),pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                             add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch), 1))}\n                             AND @{min(add(mul(int(item()), pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch),\n                             pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity)),\n                            mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, add(pipeline().parameters.CurrentSequentialNumberOfBatch,1)), pipeline().parameters.SumOfObjectsToCopy)}",
-												"type": "Expression"
-											},
-											"partitionOption": "None"
-										},
-										"dataset": {
-											"referenceName": "MetadataDS",
-											"type": "DatasetReference",
-											"parameters": {}
-										},
-										"firstRowOnly": false
-									}
-								},
-								{
-									"name": "CopyObjectsInOneGroup",
-									"description": "Execute another pipeline to copy objects from one group. The objects belonging to this group will be copied parallelly.",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "GetObjectsPerGroupToCopy",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "Ingestion_L3",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"ObjectsPerGroupToCopy": {
-												"value": "@activity('GetObjectsPerGroupToCopy').output.value",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"MaxNumberOfObjectsReturnedFromLookupActivity": {
-						"type": "Int"
-					},
-					"TopLevelPipelineName": {
-						"type": "String"
-					},
-					"TriggerName": {
-						"type": "String"
-					},
-					"CurrentSequentialNumberOfBatch": {
-						"type": "Int"
-					},
-					"SumOfObjectsToCopy": {
-						"type": "Int"
-					},
-					"SumOfObjectsToCopyForCurrentBatch": {
-						"type": "Int"
-					},
-					"MainControlTableName": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Ingestion"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-06-07T10:12:54Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
-				"[concat(variables('factoryId'), '/pipelines/Ingestion_L3')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Ingestion_L3')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -472,7 +177,7 @@
 																	"type": "Expression"
 																},
 																"preCopyScript": {
-																	"value": "@json(item().CopySinkSettings).preCopyScript",
+																	"value": "@{json(item().CopySinkSettings).preCopyScript}",
 																	"type": "Expression"
 																},
 																"maxConcurrentConnections": {
@@ -492,7 +197,7 @@
 																	"type": "Expression"
 																},
 																"tableOption": {
-																	"value": "@json(item().CopySinkSettings).tableOption",
+																	"value": "@{json(item().CopySinkSettings).tableOption}",
 																	"type": "Expression"
 																},
 																"disableMetricsCollection": {
@@ -509,14 +214,14 @@
 														},
 														"inputs": [
 															{
-																"referenceName": "IngestionSourceDS",
+																"referenceName": "ds_asql_Source",
 																"type": "DatasetReference",
 																"parameters": {
-																	"cw_schema": {
+																	"SchemaName": {
 																		"value": "@item().SourceSchemaName",
 																		"type": "Expression"
 																	},
-																	"cw_table": {
+																	"ObjectName": {
 																		"value": "@item().SourceObjectName",
 																		"type": "Expression"
 																	}
@@ -525,14 +230,14 @@
 														],
 														"outputs": [
 															{
-																"referenceName": "IngestionBronzeDS",
+																"referenceName": "ds_asql_Bronze",
 																"type": "DatasetReference",
 																"parameters": {
-																	"cw_schema": {
+																	"SchemaName": {
 																		"value": "@item().SinkSchemaName",
 																		"type": "Expression"
 																	},
-																	"cw_table": {
+																	"ObjectName": {
 																		"value": "@item().SinkObjectName",
 																		"type": "Expression"
 																	}
@@ -568,14 +273,14 @@
 																"partitionOption": "None"
 															},
 															"dataset": {
-																"referenceName": "IngestionSourceDS",
+																"referenceName": "dds_asql_Source",
 																"type": "DatasetReference",
 																"parameters": {
-																	"cw_schema": {
+																	"SchemaName": {
 																		"value": "@item().SourceSchemaName",
 																		"type": "Expression"
 																	},
-																	"cw_table": {
+																	"ObjectName": {
 																		"value": "@item().SourceObjectName",
 																		"type": "Expression"
 																	}
@@ -650,7 +355,7 @@
 																	"type": "Expression"
 																},
 																"preCopyScript": {
-																	"value": "@json(item().CopySinkSettings).preCopyScript",
+																	"value": "@{json(item().CopySinkSettings).preCopyScript}",
 																	"type": "Expression"
 																},
 																"maxConcurrentConnections": {
@@ -670,7 +375,7 @@
 																	"type": "Expression"
 																},
 																"tableOption": {
-																	"value": "@json(item().CopySinkSettings).tableOption",
+																	"value": "@{json(item().CopySinkSettings).tableOption}",
 																	"type": "Expression"
 																},
 																"disableMetricsCollection": {
@@ -687,14 +392,11 @@
 														},
 														"inputs": [
 															{
-																"referenceName": "IngestionSourceDS",
+																"referenceName": "ds_asql_Source",
 																"type": "DatasetReference",
 																"parameters": {
-																	"cw_schema": {
-																		"value": "@item().SourceSchemaName",
-																		"type": "Expression"
-																	},
-																	"cw_table": {
+																	"SchemaName": "@item().SourceSchemaName",
+																	"ObjectName": {
 																		"value": "@item().SourceObjectName",
 																		"type": "Expression"
 																	}
@@ -703,14 +405,14 @@
 														],
 														"outputs": [
 															{
-																"referenceName": "IngestionBronzeDS",
+																"referenceName": "ds_asql_Bronze",
 																"type": "DatasetReference",
 																"parameters": {
-																	"cw_schema": {
+																	"SchemaName": {
 																		"value": "@item().SinkSchemaName",
 																		"type": "Expression"
 																	},
-																	"cw_table": {
+																	"ObjectName": {
 																		"value": "@item().SinkObjectName",
 																		"type": "Expression"
 																	}
@@ -825,7 +527,7 @@
 															"type": "Expression"
 														},
 														"preCopyScript": {
-															"value": "@json(item().CopySinkSettings).preCopyScript",
+															"value": "@{json(item().CopySinkSettings).preCopyScript}",
 															"type": "Expression"
 														},
 														"maxConcurrentConnections": {
@@ -845,7 +547,7 @@
 															"type": "Expression"
 														},
 														"tableOption": {
-															"value": "@json(item().CopySinkSettings).tableOption",
+															"value": "@{json(item().CopySinkSettings).tableOption}",
 															"type": "Expression"
 														},
 														"disableMetricsCollection": {
@@ -862,14 +564,14 @@
 												},
 												"inputs": [
 													{
-														"referenceName": "IngestionSourceDS",
+														"referenceName": "ds_asql_Source",
 														"type": "DatasetReference",
 														"parameters": {
-															"cw_schema": {
+															"SchemaName": {
 																"value": "@item().SourceSchemaName",
 																"type": "Expression"
 															},
-															"cw_table": {
+															"ObjectName": {
 																"value": "@item().SourceObjectName",
 																"type": "Expression"
 															}
@@ -878,14 +580,11 @@
 												],
 												"outputs": [
 													{
-														"referenceName": "IngestionBronzeDS",
+														"referenceName": "ds_asql_Bronze",
 														"type": "DatasetReference",
 														"parameters": {
-															"cw_schema": {
-																"value": "@item().SinkSchemaName",
-																"type": "Expression"
-															},
-															"cw_table": {
+															"SchemaName": "@item().SinkSchemaName",
+															"ObjectName": {
 																"value": "@item().SinkObjectName",
 																"type": "Expression"
 															}
@@ -1049,84 +748,268 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Metadata_LS')]",
 				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
-				"[concat(variables('factoryId'), '/datasets/IngestionSourceDS')]",
-				"[concat(variables('factoryId'), '/datasets/IngestionBronzeDS')]"
+				"[concat(variables('factoryId'), '/datasets/ds_asql_Source')]",
+				"[concat(variables('factoryId'), '/datasets/ds_asql_Bronze')]",
+				"[concat(variables('factoryId'), '/datasets/dds_asql_Source')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/IngestionBronzeDS')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
+			"name": "[concat(parameters('factoryName'), '/Ingestion_L2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"linkedServiceName": {
-					"referenceName": "BRONZE_LS",
-					"type": "LinkedServiceReference"
+				"description": "This pipeline will copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
+				"activities": [
+					{
+						"name": "DivideOneBatchIntoMultipleGroups",
+						"description": "Divide objects from single batch into multiple sub parallel groups to avoid reaching the output limit of lookup activity.",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@range(0, add(div(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                    if(equals(mod(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), 0), 0, 1)))",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 50,
+							"activities": [
+								{
+									"name": "GetObjectsPerGroupToCopy",
+									"description": "Get objects (tables etc.) from control table required to be copied in this group. The order of objects to be copied following the TaskId in control table (ORDER BY [TaskId] DESC).",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "WITH OrderedControlTable AS (\n                             SELECT *, ROW_NUMBER() OVER (ORDER BY [GroupId], [Id] DESC) AS RowNumber\n                             FROM @{pipeline().parameters.MainControlTableName}\n                             where TopLevelPipelineName = '@{pipeline().parameters.TopLevelPipelineName}'\n                             and TriggerName like '%@{pipeline().parameters.TriggerName}%' and CopyEnabled = 1)\n                             SELECT * FROM OrderedControlTable WHERE RowNumber BETWEEN @{add(mul(int(item()),pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                             add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch), 1))}\n                             AND @{min(add(mul(int(item()), pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch),\n                             pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity)),\n                            mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, add(pipeline().parameters.CurrentSequentialNumberOfBatch,1)), pipeline().parameters.SumOfObjectsToCopy)}",
+												"type": "Expression"
+											},
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "MetadataDS",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"firstRowOnly": false
+									}
+								},
+								{
+									"name": "CopyObjectsInOneGroup",
+									"description": "Execute another pipeline to copy objects from one group. The objects belonging to this group will be copied parallelly.",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "GetObjectsPerGroupToCopy",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Ingestion_L1",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"ObjectsPerGroupToCopy": {
+												"value": "@activity('GetObjectsPerGroupToCopy').output.value",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"cw_schema": {
+					"MaxNumberOfObjectsReturnedFromLookupActivity": {
+						"type": "Int"
+					},
+					"TopLevelPipelineName": {
 						"type": "String"
 					},
-					"cw_table": {
+					"TriggerName": {
+						"type": "String"
+					},
+					"CurrentSequentialNumberOfBatch": {
+						"type": "Int"
+					},
+					"SumOfObjectsToCopy": {
+						"type": "Int"
+					},
+					"SumOfObjectsToCopyForCurrentBatch": {
+						"type": "Int"
+					},
+					"MainControlTableName": {
 						"type": "String"
 					}
 				},
 				"folder": {
-					"name": "ETLFWDS"
+					"name": "Ingestion"
 				},
 				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().cw_schema",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().cw_table",
-						"type": "Expression"
-					}
-				}
+				"lastPublishTime": "2025-06-07T10:12:54Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/BRONZE_LS')]"
+				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
+				"[concat(variables('factoryId'), '/pipelines/Ingestion_L1')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/IngestionSourceDS')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
+			"name": "[concat(parameters('factoryName'), '/Ingestion_L3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AWLT",
-					"type": "LinkedServiceReference"
+				"description": "This pipeline will count the total number of objects (tables etc.) required to be copied in this run, come up with the number of sequential batches based on the max allowed concurrent copy task, and then execute another pipeline to copy different batches sequentially.",
+				"activities": [
+					{
+						"name": "GetSumOfObjectsToCopy",
+						"description": "Count the total number of objects (tables etc.) required to be copied in this run.",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT count(*) as count FROM @{pipeline().parameters.MainControlTableName} where TopLevelPipelineName='@{pipeline().Pipeline}' and TriggerName like '%@{pipeline().TriggerName}%' and CopyEnabled = 1",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "MetadataDS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "CopyBatchesOfObjectsSequentially",
+						"description": "Come up with the number of sequential batches based on the max allowed concurrent copy tasks, and then execute another pipeline to copy different batches sequentially.",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetSumOfObjectsToCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@range(0, add(div(activity('GetSumOfObjectsToCopy').output.firstRow.count,\n                    pipeline().parameters.MaxNumberOfConcurrentTasks),\n                    if(equals(mod(activity('GetSumOfObjectsToCopy').output.firstRow.count,\n                    pipeline().parameters.MaxNumberOfConcurrentTasks), 0), 0, 1)))",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CopyObjectsInOneBatch",
+									"description": "Execute another pipeline to copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Ingestion_L2",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"MaxNumberOfObjectsReturnedFromLookupActivity": {
+												"value": "@pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity",
+												"type": "Expression"
+											},
+											"TopLevelPipelineName": {
+												"value": "@{pipeline().Pipeline}",
+												"type": "Expression"
+											},
+											"TriggerName": {
+												"value": "@{pipeline().TriggerName}",
+												"type": "Expression"
+											},
+											"CurrentSequentialNumberOfBatch": {
+												"value": "@item()",
+												"type": "Expression"
+											},
+											"SumOfObjectsToCopy": {
+												"value": "@activity('GetSumOfObjectsToCopy').output.firstRow.count",
+												"type": "Expression"
+											},
+											"SumOfObjectsToCopyForCurrentBatch": {
+												"value": "@min(pipeline().parameters.MaxNumberOfConcurrentTasks, activity('GetSumOfObjectsToCopy').output.firstRow.count)",
+												"type": "Expression"
+											},
+											"MainControlTableName": {
+												"value": "@pipeline().parameters.MainControlTableName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"cw_schema": {
-						"type": "String"
+					"MaxNumberOfObjectsReturnedFromLookupActivity": {
+						"type": "Int",
+						"defaultValue": 5000
 					},
-					"cw_table": {
-						"type": "String"
+					"MaxNumberOfConcurrentTasks": {
+						"type": "Int",
+						"defaultValue": 20
+					},
+					"MainControlTableName": {
+						"type": "String",
+						"defaultValue": "Control.Task_VW"
 					}
 				},
 				"folder": {
-					"name": "ETLFWDS"
+					"name": "Ingestion"
 				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().cw_schema",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().cw_table",
-						"type": "Expression"
-					}
-				}
+				"annotations": [
+					"MetadataDrivenSolution"
+				],
+				"lastPublishTime": "2025-06-08T04:19:47Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AWLT')]"
+				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
+				"[concat(variables('factoryId'), '/pipelines/Ingestion_L2')]"
 			]
 		},
 		{
@@ -1154,87 +1037,57 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ds_Parquet_sasponte')]",
+			"name": "[concat(parameters('factoryName'), '/dds_asql_Bronze')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "LakeStore_LS",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"URL": {
-						"type": "string",
-						"defaultValue": "https://saspontedev.dfs.core.windows.net"
-					},
-					"SecretName": {
-						"type": "string",
-						"defaultValue": "saspontedev-ak"
-					},
-					"FileSystem": {
-						"type": "string",
-						"defaultValue": "raw"
-					},
-					"Directory": {
-						"type": "string",
-						"defaultValue": "connection_test"
-					},
-					"File": {
-						"type": "string",
-						"defaultValue": "file.parquet"
-					}
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().File",
+					"referenceName": "dls_asql_Bronze",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ServerName": {
+							"value": "@dataset().ServerName",
 							"type": "Expression"
 						},
-						"folderPath": {
-							"value": "@dataset().Directory",
+						"DatabaseName": {
+							"value": "@dataset().DatabaseName",
 							"type": "Expression"
 						},
-						"fileSystem": {
-							"value": "@dataset().FileSystem",
+						"UserName": {
+							"value": "@dataset().UserName",
+							"type": "Expression"
+						},
+						"UserPassword": {
+							"value": "@dataset().UserPassword",
 							"type": "Expression"
 						}
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LakeStore_LS')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_SQL_Server_onprem')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "SourceServer",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"ConnectionString": {
-						"type": "string",
-						"defaultValue": "dev-Enrollment-DW-cs"
-					},
-					"SchemaName": {
-						"type": "string",
-						"defaultValue": "INFORMATION_SCHEMA"
-					},
-					"TableName": {
-						"type": "string",
-						"defaultValue": "tables"
 					}
 				},
+				"parameters": {
+					"SchemaName": {
+						"type": "String"
+					},
+					"ObjectName": {
+						"type": "String"
+					},
+					"ServerName": {
+						"type": "string"
+					},
+					"DatabaseName": {
+						"type": "string"
+					},
+					"UserName": {
+						"type": "string"
+					},
+					"UserPassword": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ETLFWDS"
+				},
 				"annotations": [],
-				"type": "SqlServerTable",
+				"type": "AzureSqlTable",
 				"schema": [],
 				"typeProperties": {
 					"schema": {
@@ -1242,41 +1095,121 @@
 						"type": "Expression"
 					},
 					"table": {
-						"value": "@dataset().TableName",
+						"value": "@dataset().ObjectName",
 						"type": "Expression"
 					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SourceServer')]"
+				"[concat(variables('factoryId'), '/linkedServices/dls_asql_Bronze')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/AWLT')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"name": "[concat(parameters('factoryName'), '/dds_asql_Source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"server": "[parameters('AWLT_properties_typeProperties_server')]",
-					"database": "[parameters('AWLT_properties_typeProperties_database')]",
-					"encrypt": "mandatory",
-					"trustServerCertificate": false,
-					"authenticationType": "SQL",
-					"userName": "[parameters('AWLT_properties_typeProperties_userName')]",
-					"password": {
-						"type": "SecureString",
-						"value": "[parameters('AWLT_password')]"
+				"linkedServiceName": {
+					"referenceName": "AWLT_LS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "String"
+					},
+					"ObjectName": {
+						"type": "String"
 					}
 				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
+				"folder": {
+					"name": "ETLFWDS"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().ObjectName",
+						"type": "Expression"
+					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+				"[concat(variables('factoryId'), '/linkedServices/AWLT_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_asql_Bronze')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "BRONZE_LS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "string"
+					},
+					"ObjectName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().ObjectName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/BRONZE_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_asql_Source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AWLT_LS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "string"
+					},
+					"ObjectName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().ObjectName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AWLT_LS')]"
 			]
 		},
 		{
@@ -1336,34 +1269,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DEST_LS')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"server": "[parameters('DEST_LS_properties_typeProperties_server')]",
-					"database": "[parameters('DEST_LS_properties_typeProperties_database')]",
-					"encrypt": "mandatory",
-					"trustServerCertificate": false,
-					"authenticationType": "SQL",
-					"userName": "[parameters('DEST_LS_properties_typeProperties_userName')]",
-					"password": {
-						"type": "SecureString",
-						"value": "[parameters('DEST_LS_password')]"
-					}
-				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/LakeStore_LS')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1411,23 +1316,34 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/SourceServer')]",
+			"name": "[concat(parameters('factoryName'), '/dls_asql_Bronze')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"parameters": {
+					"ServerName": {
+						"type": "string"
+					},
+					"DatabaseName": {
+						"type": "string"
+					},
+					"UserName": {
+						"type": "string"
+					},
+					"UserPassword": {
+						"type": "string"
+					}
+				},
 				"annotations": [],
-				"type": "SqlServer",
+				"type": "AzureSqlDatabase",
 				"typeProperties": {
-					"server": "[parameters('SourceServer_properties_typeProperties_server')]",
-					"database": "[parameters('SourceServer_properties_typeProperties_database')]",
+					"server": "[parameters('dls_asql_Bronze_properties_typeProperties_server')]",
+					"database": "[parameters('dls_asql_Bronze_properties_typeProperties_database')]",
 					"encrypt": "mandatory",
 					"trustServerCertificate": false,
 					"authenticationType": "SQL",
-					"userName": "[parameters('SourceServer_properties_typeProperties_userName')]",
-					"password": {
-						"type": "SecureString",
-						"value": "[parameters('SourceServer_password')]"
-					}
+					"userName": "[parameters('dls_asql_Bronze_properties_typeProperties_userName')]",
+					"password": "@{linkedService().UserPassword}"
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",

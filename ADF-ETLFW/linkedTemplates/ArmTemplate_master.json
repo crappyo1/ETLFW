@@ -7,10 +7,6 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "ADF-ETLFW"
 		},
-		"AWLT_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'AWLT'"
-		},
 		"AWLT_LS_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'AWLT_LS'"
@@ -19,29 +15,9 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'BRONZE_LS'"
 		},
-		"DEST_LS_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'DEST_LS'"
-		},
 		"Metadata_LS_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'Metadata_LS'"
-		},
-		"SourceServer_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'SourceServer'"
-		},
-		"AWLT_properties_typeProperties_server": {
-			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
-		},
-		"AWLT_properties_typeProperties_database": {
-			"type": "string",
-			"defaultValue": "AdventureWorksLT"
-		},
-		"AWLT_properties_typeProperties_userName": {
-			"type": "string",
-			"defaultValue": "as1src"
 		},
 		"AWLT_LS_properties_typeProperties_server": {
 			"type": "string",
@@ -67,18 +43,6 @@
 			"type": "string",
 			"defaultValue": "as1src"
 		},
-		"DEST_LS_properties_typeProperties_server": {
-			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
-		},
-		"DEST_LS_properties_typeProperties_database": {
-			"type": "string",
-			"defaultValue": "DEST"
-		},
-		"DEST_LS_properties_typeProperties_userName": {
-			"type": "string",
-			"defaultValue": "as1src"
-		},
 		"LakeStore_LS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://lakestore.dfs.core.windows.net/"
@@ -95,17 +59,17 @@
 			"type": "string",
 			"defaultValue": "as1src"
 		},
-		"SourceServer_properties_typeProperties_server": {
+		"dls_asql_Bronze_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
+			"defaultValue": "@{linkedService().ServerName}"
 		},
-		"SourceServer_properties_typeProperties_database": {
+		"dls_asql_Bronze_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "SRC"
+			"defaultValue": "@{linkedService().DatabaseName}"
 		},
-		"SourceServer_properties_typeProperties_userName": {
+		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
-			"defaultValue": "as1src"
+			"defaultValue": "@{linkedService().UserName}"
 		},
 		"containerUri": {
 			"type": "string",
@@ -134,32 +98,14 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"AWLT_password": {
-						"value": "[parameters('AWLT_password')]"
-					},
 					"AWLT_LS_password": {
 						"value": "[parameters('AWLT_LS_password')]"
 					},
 					"BRONZE_LS_password": {
 						"value": "[parameters('BRONZE_LS_password')]"
 					},
-					"DEST_LS_password": {
-						"value": "[parameters('DEST_LS_password')]"
-					},
 					"Metadata_LS_password": {
 						"value": "[parameters('Metadata_LS_password')]"
-					},
-					"SourceServer_password": {
-						"value": "[parameters('SourceServer_password')]"
-					},
-					"AWLT_properties_typeProperties_server": {
-						"value": "[parameters('AWLT_properties_typeProperties_server')]"
-					},
-					"AWLT_properties_typeProperties_database": {
-						"value": "[parameters('AWLT_properties_typeProperties_database')]"
-					},
-					"AWLT_properties_typeProperties_userName": {
-						"value": "[parameters('AWLT_properties_typeProperties_userName')]"
 					},
 					"AWLT_LS_properties_typeProperties_server": {
 						"value": "[parameters('AWLT_LS_properties_typeProperties_server')]"
@@ -179,15 +125,6 @@
 					"BRONZE_LS_properties_typeProperties_userName": {
 						"value": "[parameters('BRONZE_LS_properties_typeProperties_userName')]"
 					},
-					"DEST_LS_properties_typeProperties_server": {
-						"value": "[parameters('DEST_LS_properties_typeProperties_server')]"
-					},
-					"DEST_LS_properties_typeProperties_database": {
-						"value": "[parameters('DEST_LS_properties_typeProperties_database')]"
-					},
-					"DEST_LS_properties_typeProperties_userName": {
-						"value": "[parameters('DEST_LS_properties_typeProperties_userName')]"
-					},
 					"LakeStore_LS_properties_typeProperties_url": {
 						"value": "[parameters('LakeStore_LS_properties_typeProperties_url')]"
 					},
@@ -200,14 +137,14 @@
 					"Metadata_LS_properties_typeProperties_userName": {
 						"value": "[parameters('Metadata_LS_properties_typeProperties_userName')]"
 					},
-					"SourceServer_properties_typeProperties_server": {
-						"value": "[parameters('SourceServer_properties_typeProperties_server')]"
+					"dls_asql_Bronze_properties_typeProperties_server": {
+						"value": "[parameters('dls_asql_Bronze_properties_typeProperties_server')]"
 					},
-					"SourceServer_properties_typeProperties_database": {
-						"value": "[parameters('SourceServer_properties_typeProperties_database')]"
+					"dls_asql_Bronze_properties_typeProperties_database": {
+						"value": "[parameters('dls_asql_Bronze_properties_typeProperties_database')]"
 					},
-					"SourceServer_properties_typeProperties_userName": {
-						"value": "[parameters('SourceServer_properties_typeProperties_userName')]"
+					"dls_asql_Bronze_properties_typeProperties_userName": {
+						"value": "[parameters('dls_asql_Bronze_properties_typeProperties_userName')]"
 					}
 				}
 			},
