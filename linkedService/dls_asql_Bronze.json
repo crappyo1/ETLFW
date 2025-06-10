@@ -19,8 +19,8 @@
 		"annotations": [],
 		"type": "AzureSqlDatabase",
 		"typeProperties": {
-			"server": "as1src.database.windows.net",
-			"database": "BRONZE",
+			"server": "@{linkedService().ServerName}",
+			"database": "@{linkedService().DatabaseName}",
 			"encrypt": "mandatory",
 			"trustServerCertificate": false,
 			"authenticationType": "SQL",
