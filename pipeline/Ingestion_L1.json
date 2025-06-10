@@ -153,11 +153,11 @@
 														"referenceName": "IngestionBronzeDS",
 														"type": "DatasetReference",
 														"parameters": {
-															"cw_schema": {
+															"SchemaName": {
 																"value": "@item().SinkSchemaName",
 																"type": "Expression"
 															},
-															"cw_table": {
+															"ObjectName": {
 																"value": "@item().SinkObjectName",
 																"type": "Expression"
 															}
@@ -331,11 +331,11 @@
 														"referenceName": "IngestionBronzeDS",
 														"type": "DatasetReference",
 														"parameters": {
-															"cw_schema": {
+															"SchemaName": {
 																"value": "@item().SinkSchemaName",
 																"type": "Expression"
 															},
-															"cw_table": {
+															"ObjectName": {
 																"value": "@item().SinkObjectName",
 																"type": "Expression"
 															}
@@ -506,11 +506,11 @@
 												"referenceName": "IngestionBronzeDS",
 												"type": "DatasetReference",
 												"parameters": {
-													"cw_schema": {
+													"SchemaName": {
 														"value": "@item().SinkSchemaName",
 														"type": "Expression"
 													},
-													"cw_table": {
+													"ObjectName": {
 														"value": "@item().SinkObjectName",
 														"type": "Expression"
 													}
