@@ -1,0 +1,76 @@
+{
+	"name": "pl_L001_IngestOneObject",
+	"properties": {
+		"activities": [
+			{
+				"name": "DefaultFullLoadOneObject",
+				"description": "Take a full snapshot on this object and copy it to the destination",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"partitionSettings": {
+							"partitionNames": "@json(item().CopySourceSettings).partitionNames"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert"
+					},
+					"enableStaging": false,
+					"validateDataConsistency": false,
+					"translator": {
+						"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            string(pipeline().parameters.IngestionConfig.mapping),\n            ',\n            \"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
+						"type": "Expression"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "dds_asql_Source",
+						"type": "DatasetReference",
+						"parameters": {
+							"Config": {
+								"value": "@pipeline().parameters.IngestionConfig.sourceConfig.dataset",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_asql_Bronze",
+						"type": "DatasetReference",
+						"parameters": {
+							"SchemaName": {
+								"value": "@pipeline().parameters.IngestionConfig.destinationConfig.dataset.schemaName",
+								"type": "Expression"
+							},
+							"ObjectName": {
+								"value": "@pipeline().parameters.IngestionConfig.destinationConfig.dataset.objectName",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"IngestionConfig": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "Level 1"
+		},
+		"annotations": []
+	}
+}

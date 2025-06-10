@@ -6,11 +6,8 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"SchemaName": {
-				"type": "String"
-			},
-			"ObjectName": {
-				"type": "String"
+			"Config": {
+				"type": "object"
 			}
 		},
 		"folder": {
@@ -21,11 +18,11 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": {
-				"value": "@dataset().SchemaName",
+				"value": "@dataset().Config.schemaName",
 				"type": "Expression"
 			},
 			"table": {
-				"value": "@dataset().ObjectName",
+				"value": "@dataset().Config.objectName",
 				"type": "Expression"
 			}
 		}
