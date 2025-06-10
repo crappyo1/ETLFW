@@ -352,11 +352,8 @@
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
-					"SchemaName": {
-						"type": "String"
-					},
-					"ObjectName": {
-						"type": "String"
+					"Config": {
+						"type": "object"
 					}
 				},
 				"folder": {
@@ -367,11 +364,11 @@
 				"schema": [],
 				"typeProperties": {
 					"schema": {
-						"value": "@dataset().SchemaName",
+						"value": "@dataset().Config.schemaName",
 						"type": "Expression"
 					},
 					"table": {
-						"value": "@dataset().ObjectName",
+						"value": "@dataset().Config.objectName",
 						"type": "Expression"
 					}
 				}
@@ -647,7 +644,7 @@
 																"partitionOption": "None"
 															},
 															"dataset": {
-																"referenceName": "dds_asql_Source",
+																"referenceName": "ds_asql_Source",
 																"type": "DatasetReference",
 																"parameters": {
 																	"SchemaName": {
@@ -1123,8 +1120,7 @@
 				"[concat(variables('factoryId'), '/linkedServices/Metadata_LS')]",
 				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
 				"[concat(variables('factoryId'), '/datasets/ds_asql_Source')]",
-				"[concat(variables('factoryId'), '/datasets/ds_asql_Bronze')]",
-				"[concat(variables('factoryId'), '/datasets/dds_asql_Source')]"
+				"[concat(variables('factoryId'), '/datasets/ds_asql_Bronze')]"
 			]
 		},
 		{
