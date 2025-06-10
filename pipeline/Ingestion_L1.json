@@ -193,7 +193,7 @@
 														"partitionOption": "None"
 													},
 													"dataset": {
-														"referenceName": "dds_asql_Source",
+														"referenceName": "ds_asql_Source",
 														"type": "DatasetReference",
 														"parameters": {
 															"SchemaName": {
