@@ -1,5 +1,5 @@
 {
-	"name": "Ingestion_L3",
+	"name": "Ingestion_L1",
 	"properties": {
 		"description": "This pipeline will copy objects from one group. The objects belonging to this group will be copied parallelly.",
 		"activities": [

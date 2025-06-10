@@ -64,7 +64,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Ingestion_L3",
+									"referenceName": "Ingestion_L1",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
