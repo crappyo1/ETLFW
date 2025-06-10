@@ -134,14 +134,14 @@
 												},
 												"inputs": [
 													{
-														"referenceName": "IngestionSourceDS",
+														"referenceName": "dds_asql_Source",
 														"type": "DatasetReference",
 														"parameters": {
-															"cw_schema": {
+															"SchemaName": {
 																"value": "@item().SourceSchemaName",
 																"type": "Expression"
 															},
-															"cw_table": {
+															"ObjectName": {
 																"value": "@item().SourceObjectName",
 																"type": "Expression"
 															}
@@ -150,7 +150,7 @@
 												],
 												"outputs": [
 													{
-														"referenceName": "IngestionBronzeDS",
+														"referenceName": "dds_asql_Bronze",
 														"type": "DatasetReference",
 														"parameters": {
 															"SchemaName": {
@@ -193,14 +193,14 @@
 														"partitionOption": "None"
 													},
 													"dataset": {
-														"referenceName": "IngestionSourceDS",
+														"referenceName": "dds_asql_Source",
 														"type": "DatasetReference",
 														"parameters": {
-															"cw_schema": {
+															"SchemaName": {
 																"value": "@item().SourceSchemaName",
 																"type": "Expression"
 															},
-															"cw_table": {
+															"ObjectName": {
 																"value": "@item().SourceObjectName",
 																"type": "Expression"
 															}
@@ -312,14 +312,14 @@
 												},
 												"inputs": [
 													{
-														"referenceName": "IngestionSourceDS",
+														"referenceName": "dds_asql_Source",
 														"type": "DatasetReference",
 														"parameters": {
-															"cw_schema": {
+															"SchemaName": {
 																"value": "@item().SourceSchemaName",
 																"type": "Expression"
 															},
-															"cw_table": {
+															"ObjectName": {
 																"value": "@item().SourceObjectName",
 																"type": "Expression"
 															}
@@ -328,7 +328,7 @@
 												],
 												"outputs": [
 													{
-														"referenceName": "IngestionBronzeDS",
+														"referenceName": "dds_asql_Bronze",
 														"type": "DatasetReference",
 														"parameters": {
 															"SchemaName": {
@@ -487,14 +487,14 @@
 										},
 										"inputs": [
 											{
-												"referenceName": "IngestionSourceDS",
+												"referenceName": "dds_asql_Source",
 												"type": "DatasetReference",
 												"parameters": {
-													"cw_schema": {
+													"SchemaName": {
 														"value": "@item().SourceSchemaName",
 														"type": "Expression"
 													},
-													"cw_table": {
+													"ObjectName": {
 														"value": "@item().SourceObjectName",
 														"type": "Expression"
 													}
@@ -503,7 +503,7 @@
 										],
 										"outputs": [
 											{
-												"referenceName": "IngestionBronzeDS",
+												"referenceName": "dds_asql_Bronze",
 												"type": "DatasetReference",
 												"parameters": {
 													"SchemaName": {

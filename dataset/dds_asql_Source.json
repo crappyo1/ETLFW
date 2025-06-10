@@ -1,15 +1,15 @@
 {
-	"name": "IngestionSourceDS",
+	"name": "dds_asql_Source",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "AWLT",
+			"referenceName": "AWLT_LS",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"cw_schema": {
+			"SchemaName": {
 				"type": "String"
 			},
-			"cw_table": {
+			"ObjectName": {
 				"type": "String"
 			}
 		},
@@ -21,11 +21,11 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": {
-				"value": "@dataset().cw_schema",
+				"value": "@dataset().SchemaName",
 				"type": "Expression"
 			},
 			"table": {
-				"value": "@dataset().cw_table",
+				"value": "@dataset().ObjectName",
 				"type": "Expression"
 			}
 		}

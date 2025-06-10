@@ -1,5 +1,5 @@
 {
-	"name": "IngestionBronzeDS",
+	"name": "dds_asql_Bronze",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "BRONZE_LS",
