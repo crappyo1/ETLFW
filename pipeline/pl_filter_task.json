@@ -19,10 +19,6 @@
 						"type": "JsonSource",
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
-							"maxConcurrentConnections": {
-								"value": "@pipeline().parameters.maxConcurrentTasks",
-								"type": "Expression"
-							},
 							"recursive": false,
 							"enablePartitionDiscovery": false
 						},
@@ -34,8 +30,16 @@
 						"referenceName": "dds_etl_fw_metadata",
 						"type": "DatasetReference",
 						"parameters": {
-							"rootPath": {
+							"location": {
+								"value": "@pipeline().parameters.metadataLocation",
+								"type": "Expression"
+							},
+							"path": {
 								"value": "@pipeline().parameters.metadataPath",
+								"type": "Expression"
+							},
+							"configName": {
+								"value": "@pipeline().parameters.metadataFilename",
 								"type": "Expression"
 							}
 						}
@@ -68,16 +72,23 @@
 			}
 		],
 		"parameters": {
-			"metadataPath": {
+			"metadataLocation": {
 				"type": "string",
 				"defaultValue": "metadata"
+			},
+			"metadataPath": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"metadataFilename": {
+				"type": "string"
+			},
+			"taskType": {
+				"type": "string"
 			},
 			"maxConcurrentTasks": {
 				"type": "int",
 				"defaultValue": 20
-			},
-			"taskType": {
-				"type": "string"
 			}
 		},
 		"folder": {
