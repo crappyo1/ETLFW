@@ -1,0 +1,17 @@
+[
+    {
+        "objectId": "SalesLT.Address",
+        "schemaName": "SalesLT",
+        "objectName": "Address"
+    },
+    {
+        "objectId": "SalesLT.Customer",
+        "schemaName": "SalesLT",
+        "objectName": "Customer"
+    },
+    {
+        "objectId": "SalesLT.CustomerAddress",
+        "schemaName": "SalesLT",
+        "objectName": "CustomerAddress"
+    }
+]

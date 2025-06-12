@@ -1,0 +1,10 @@
+[
+    {
+        "sourceId": "SalesLT.Customer",
+        "sinkId": "SalesLT.Customer",
+        "type": "transform",
+        "sequenceNo": 1,
+        "mappingId": "addr_addr",
+        "groupId": 0
+    }
+]

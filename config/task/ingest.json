@@ -1,0 +1,26 @@
+[
+    {
+        "sourceId": "SalesLT.Address",
+        "sinkId": "SalesLT.Address",
+        "type": "ingest",
+        "sequenceNo": 1,
+        "mappingId": "addr_addr",
+        "groupId": 0
+    },
+    {
+        "sourceId": "SalesLT.Customer",
+        "sinkId": "SalesLT.Customer",
+        "type": "ingest",
+        "sequenceNo": 2,
+        "mappingId": "cust_cust",
+        "groupId": 0
+    },
+    {
+        "sourceId": "SalesLT.CustomerAddress",
+        "sinkId": "SalesLT.CustomerAddress",
+        "type": "ingest",
+        "sequenceNo": 3,
+        "mappingId": "custaddr_custaddr",
+        "groupId": 0
+    }
+]

@@ -1,0 +1,62 @@
+[
+    {
+        "source": {
+            "name": "CustomerID",
+            "type": "Int32",
+            "physicalType": "int"
+        },
+        "sink": {
+            "name": "CustomerID",
+            "type": "Int32",
+            "physicalType": "int"
+        }
+    },
+    {
+        "source": {
+            "name": "AddressID",
+            "type": "Int32",
+            "physicalType": "int"
+        },
+        "sink": {
+            "name": "AddressID",
+            "type": "Int32",
+            "physicalType": "int"
+        }
+    },
+    {
+        "source": {
+            "name": "AddressType",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "AddressType",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "rowguid",
+            "type": "Guid",
+            "physicalType": "uniqueidentifier"
+        },
+        "sink": {
+            "name": "rowguid",
+            "type": "Guid",
+            "physicalType": "uniqueidentifier"
+        }
+    },
+    {
+        "source": {
+            "name": "ModifiedDate",
+            "type": "DateTime",
+            "physicalType": "datetime"
+        },
+        "sink": {
+            "name": "ModifiedDate",
+            "type": "DateTime",
+            "physicalType": "datetime2"
+        }
+    }
+]

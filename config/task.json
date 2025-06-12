@@ -1,52 +1,8 @@
-﻿
---  CREATE SCHEMA Control
--- GO
-IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Control].[Task]') AND type in (N'U'))
-DROP TABLE [Control].[Task]
-GO
-CREATE TABLE [Control].[Task](
-	[Id] [int] IDENTITY(1,1) NOT NULL,
-	-- [SourceObjectSettings] [nvarchar](max) NULL,
-	[SourceObjectId] [int],
-	[SourceConnectionSettingsName] [varchar](max) NULL,
-	[CopySourceSettings] [nvarchar](max) NULL,
-	-- [SinkObjectSettings] [nvarchar](max) NULL,
-	[SinkObjectId] [int],
-	[SinkConnectionSettingsName] [varchar](max) NULL,
-	[CopySinkSettings] [nvarchar](max) NULL,
-	[CopyActivitySettings] [nvarchar](max) NULL,
-	[TopLevelPipelineName] [varchar](max) NULL,
-	[TriggerName] [nvarchar](max) NULL,
-	[DataLoadingBehaviorSettings] [nvarchar](max) NULL,
-    [MappingId] [int] NULL,
-	-- [TaskId] [int] NULL,
-    [GroupId] [int] NULL,
-	[CopyEnabled] [bit] NULL
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-ALTER TABLE [Control].[Task] ADD PRIMARY KEY CLUSTERED 
-(
-	[Id] ASC
-)WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-GO
-
-/*
-        "SourceObjectSettings": {
-            "schema": "SalesLT",
-            "table": "Address"
-        },
-        "SinkObjectSettings": {
-            "schema": "SalesLT",
-            "table": "Address"
-        },
-        "TaskId": 0,
-*/
-
-DECLARE @TaskMetadata NVARCHAR(max)  = N'[
+[
     {
-
-        "SourceName": "SalesLT.Address",
-        "SinkName": "SalesLT.Address",
+        "sourceId": "SalesLT.Address",
+        "sinkId": "SalesLT.Address",
+        "type": "ingest",
         "CopySourceSettings": {
             "isolationLevel": "ReadCommitted",
             "partitionOption": "None",
@@ -191,7 +147,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
                 }
             }
         },
-        "TopLevelPipelineName": "Ingestion_L3",
+        "TopLevelPipelineName": "Ingestion_L1",
         "TriggerName": [
             "Sandbox",
             "Manual"
@@ -202,13 +158,14 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": "DateTime",
             "watermarkColumnStartValue": "2006-06-01T00:00:00.000Z"
         },
-        "MappingId": 1,
-        "GroupId": 0,
+        "mappingId": "addr_addr",
+        "groupId": 0,
         "CopyEnabled": 1
     },
     {
-        "SourceName": "SalesLT.Customer",
-        "SinkName": "SalesLT.Customer",
+        "sourceId": "SalesLT.Customer",
+        "sinkId": "SalesLT.Customer",
+        "type": "ingest",
         "CopySourceSettings": {
             "isolationLevel": null,
             "partitionOption": "None",
@@ -420,7 +377,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
                 }
             }
         },
-        "TopLevelPipelineName": "Ingestion_L3",
+        "TopLevelPipelineName": "Ingestion_L1",
         "TriggerName": [
             "Sandbox",
             "Manual"
@@ -431,13 +388,14 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": null,
             "watermarkColumnStartValue": null
         },
-        "MappingId": 2,
-        "GroupId": 0,
+        "mappingId": "cust_cust",
+        "groupId": 0,
         "CopyEnabled": 1
     },
     {
-        "SourceName": "SalesLT.CustomerAddress",
-        "SinkName": "SalesLT.CustomerAddress",
+        "sourceId": "SalesLT.CustomerAddress",
+        "sinkId": "SalesLT.CustomerAddress",
+        "type": "ingest",
         "CopySourceSettings": {
             "isolationLevel": null,
             "partitionOption": "None",
@@ -535,7 +493,7 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
                 }
             }
         },
-        "TopLevelPipelineName": "Ingestion_L3",
+        "TopLevelPipelineName": "Ingestion_L1",
         "TriggerName": [
             "Sandbox",
             "Manual"
@@ -546,68 +504,13 @@ DECLARE @TaskMetadata NVARCHAR(max)  = N'[
             "watermarkColumnType": "DateTime",
             "watermarkColumnStartValue": "2006-06-01T00:00:00.000Z"
         },
-        "MappingId": 3,
-        "GroupId": 0,
+        "mappingId": "custaddr_custaddr",
+        "groupId": 0,
         "CopyEnabled": 1
+    },
+    {
+        "sourceId": "SalesLT.Customer",
+        "sinkId": "SalesLT.Customer",
+        "type": "cleanse"
     }
-]';
-
-
-INSERT INTO [Control].[Task] (
-    -- [SourceObjectSettings],    
-    [SourceObjectId],
-    [SourceConnectionSettingsName],
-    [CopySourceSettings],
-    -- [SinkObjectSettings],
-    [SinkObjectId],
-    [SinkConnectionSettingsName],
-    [CopySinkSettings],
-    [CopyActivitySettings],
-    [TopLevelPipelineName],
-    [TriggerName],
-    [DataLoadingBehaviorSettings],
-    [MappingId],
-    -- [TaskId],
-    [GroupId],
-    [CopyEnabled])
-SELECT
-    -- TaskData.[SourceObjectSettings],    
-    SrcO.Id,
-    TaskData.[SourceConnectionSettingsName],
-    TaskData.[CopySourceSettings],
-    -- TaskData.[SinkObjectSettings],
-     SnkO.Id,
-    TaskData.[SinkConnectionSettingsName],
-    TaskData.[CopySinkSettings],
-    TaskData.[CopyActivitySettings],
-    TaskData.[TopLevelPipelineName],
-    TaskData.[TriggerName],
-    TaskData.[DataLoadingBehaviorSettings],
-    TaskData.[MappingId],
-    -- TaskData.[TaskId],
-    TaskData.[GroupId],
-    TaskData.[CopyEnabled]
-
-FROM OPENJSON(@TaskMetadata)
-WITH (
-    -- [SourceObjectSettings] [nvarchar](max) AS JSON,
-    [SourceName][nvarchar](64),
-    [SourceConnectionSettingsName] [varchar](max),
-    [CopySourceSettings] [nvarchar](max) AS JSON,
-    -- [SinkObjectSettings] [nvarchar](max) AS JSON,
-    [SinkName][nvarchar](64),    
-    [SinkConnectionSettingsName] [varchar](max),
-    [CopySinkSettings] [nvarchar](max) AS JSON,
-    [CopyActivitySettings] [nvarchar](max) AS JSON,
-    [TopLevelPipelineName] [varchar](max),
-    [TriggerName] [nvarchar](max) AS JSON,
-    [DataLoadingBehaviorSettings] [nvarchar](max) AS JSON,
-    [MappingId] [int],
-    -- [TaskId] [int],
-    [GroupId] [int],
-    [CopyEnabled] [bit]
-) AS TaskData
-LEFT JOIN [Control].[SourceObject] AS SrcO ON SrcO.[Name] = TaskData.[SourceName]
-LEFT JOIN [Control].[SinkObject] AS SnkO ON SnkO.[Name] = TaskData.[SinkName]
-
-GO
+]

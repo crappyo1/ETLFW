@@ -1,0 +1,20 @@
+[
+    {
+        "taskId": "task1",
+        "status": 1,
+        "errorMessage": "Task completed successfully",
+        "createdOn": "2023-10-01T12:00:00Z"
+    },
+    {
+        "taskId": "task2",
+        "status": 1,
+        "errorMessage": "",
+        "createdOn": "2023-10-01T12:05:00Z"
+    },
+    {
+        "taskId": "task3",
+        "status": 0,
+        "errorMessage": "Task failed due to an error",
+        "createdOn": "2023-10-01T12:10:00Z"
+    }
+]

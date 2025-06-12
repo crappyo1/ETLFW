@@ -1,0 +1,10 @@
+[
+    {
+        "sourceId": "SalesLT.Customer",
+        "sinkId": "SalesLT.Customer",
+        "mappingId": "SalesLT.Customer",
+        "type": "cleanse",
+        "groupId": 1,
+        "sequenceNo": 1
+    }
+]

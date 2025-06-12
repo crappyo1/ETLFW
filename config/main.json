@@ -1,0 +1,28 @@
+{
+    "executionOrder": [
+        {
+            "sequenceNo": 1,
+            "stage": "ingest",
+            "source": "adventureworkslt",
+            "destination": "bronze"
+        },
+        {
+            "sequenceNo": 2,
+            "stage": "cleanse",
+            "source": "adventureworkslt",
+            "destination": "bronze"
+        },
+        {
+            "sequenceNo": 3,
+            "stage": "transform",
+            "source": "silver",
+            "destination": "gold"
+        },
+        {
+            "sequenceNo": 4,
+            "stage": "load",
+            "source": "gold",
+            "destination": "target"
+        }
+    ]
+}

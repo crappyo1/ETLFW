@@ -1,0 +1,182 @@
+[
+    {
+        "source": {
+            "name": "CustomerID",
+            "type": "Int32",
+            "physicalType": "int"
+        },
+        "sink": {
+            "name": "CustomerID",
+            "type": "Int32",
+            "physicalType": "int"
+        }
+    },
+    {
+        "source": {
+            "name": "NameStyle",
+            "type": "Boolean",
+            "physicalType": "bit"
+        },
+        "sink": {
+            "name": "NameStyle",
+            "type": "Boolean",
+            "physicalType": "bit"
+        }
+    },
+    {
+        "source": {
+            "name": "Title",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "Title",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "FirstName",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "FirstName",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "MiddleName",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "MiddleName",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "LastName",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "LastName",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "PasswordSalt",
+            "type": "String",
+            "physicalType": "varchar"
+        },
+        "sink": {
+            "name": "PasswordSalt",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "rowguid",
+            "type": "Guid",
+            "physicalType": "uniqueidentifier"
+        },
+        "sink": {
+            "name": "rowguid",
+            "type": "Guid",
+            "physicalType": "uniqueidentifier"
+        }
+    },
+    {
+        "source": {
+            "name": "ModifiedDate",
+            "type": "DateTime",
+            "physicalType": "datetime"
+        },
+        "sink": {
+            "name": "ModifiedDate",
+            "type": "DateTime",
+            "physicalType": "datetime2"
+        }
+    },
+    {
+        "source": {
+            "name": "Suffix",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "Suffix",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "CompanyName",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "CompanyName",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "SalesPerson",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "SalesPerson",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "EmailAddress",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "EmailAddress",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "Phone",
+            "type": "String",
+            "physicalType": "nvarchar"
+        },
+        "sink": {
+            "name": "Phone",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    },
+    {
+        "source": {
+            "name": "PasswordHash",
+            "type": "String",
+            "physicalType": "varchar"
+        },
+        "sink": {
+            "name": "PasswordHash",
+            "type": "String",
+            "physicalType": "nvarchar"
+        }
+    }
+]
