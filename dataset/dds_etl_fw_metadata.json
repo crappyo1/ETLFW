@@ -1,0 +1,31 @@
+{
+	"name": "dds_etl_fw_metadata",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_metadata",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"rootPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ETLFWDS"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "task.json",
+				"folderPath": "config",
+				"fileSystem": {
+					"value": "@dataset().rootPath",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	}
+}
