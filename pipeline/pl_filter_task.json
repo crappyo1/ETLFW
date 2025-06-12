@@ -1,0 +1,88 @@
+{
+	"name": "pl_filter_task",
+	"properties": {
+		"activities": [
+			{
+				"name": "act_get_metadata",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"maxConcurrentConnections": {
+								"value": "@pipeline().parameters.maxConcurrentTasks",
+								"type": "Expression"
+							},
+							"recursive": false,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "dds_etl_fw_metadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"rootPath": {
+								"value": "@pipeline().parameters.metadataPath",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "act_filter_tasks",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "act_get_metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('act_get_metadata').output.value",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().type, pipeline().parameters.taskType)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"metadataPath": {
+				"type": "string",
+				"defaultValue": "metadata"
+			},
+			"maxConcurrentTasks": {
+				"type": "int",
+				"defaultValue": 20
+			},
+			"taskType": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "top"
+		},
+		"annotations": []
+	}
+}
