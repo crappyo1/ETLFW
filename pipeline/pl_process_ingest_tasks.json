@@ -1,0 +1,80 @@
+{
+	"name": "pl_process_ingest_tasks",
+	"properties": {
+		"activities": [
+			{
+				"name": "act_process_each_ingest_task",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.tasksToProcess",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "act_execute_task",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "pl_process_one_ingest_task",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"metadataLocation": {
+										"value": "@pipeline().parameters.metadataLocation",
+										"type": "Expression"
+									},
+									"metadataPath": {
+										"value": "@pipeline().parameters.metadataPath",
+										"type": "Expression"
+									},
+									"maxConcurrentTasks": {
+										"value": "@pipeline().parameters.maxConcurrentTasks",
+										"type": "Expression"
+									},
+									"taskToProcess": {
+										"value": "@item()",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"metadataLocation": {
+				"type": "string",
+				"defaultValue": "metadata"
+			},
+			"metadataPath": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"maxConcurrentTasks": {
+				"type": "int",
+				"defaultValue": 20
+			},
+			"tasksToProcess": {
+				"type": "array"
+			},
+			"dataLinks": {
+				"type": "array"
+			}
+		},
+		"folder": {
+			"name": "level 1"
+		},
+		"annotations": []
+	}
+}

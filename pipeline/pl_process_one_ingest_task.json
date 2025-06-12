@@ -1,0 +1,91 @@
+{
+	"name": "pl_process_one_ingest_task",
+	"properties": {
+		"activities": [
+			{
+				"name": "act_get_object_mapping",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "dds_etl_fw_metadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": {
+								"value": "@pipeline().parameters.metadataLocation",
+								"type": "Expression"
+							},
+							"path": {
+								"value": "@concat(pipeline().parameters.metadataPath,'/mapping')",
+								"type": "Expression"
+							},
+							"configName": {
+								"value": "@concat(pipeline().parameters.taskToProcess.mappingId, '.json')",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "act_filter_source_data_link",
+				"type": "Filter",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.dataLinks",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().dataLinkId, pipeline().parameters.taskToProcess.dataLinkId)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"metadataLocation": {
+				"type": "string",
+				"defaultValue": "metadata"
+			},
+			"metadataPath": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"maxConcurrentTasks": {
+				"type": "string",
+				"defaultValue": "20"
+			},
+			"taskToProcess": {
+				"type": "object"
+			},
+			"dataLinks": {
+				"type": "array"
+			}
+		},
+		"folder": {
+			"name": "level 1"
+		},
+		"annotations": []
+	}
+}
