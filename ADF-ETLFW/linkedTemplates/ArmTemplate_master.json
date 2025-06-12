@@ -19,13 +19,21 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'Metadata_LS'"
 		},
+		"ls_adls_bronze_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_bronze'"
+		},
+		"ls_adls_metadata_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_metadata'"
+		},
 		"AWLT_LS_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "as1src.database.windows.net"
 		},
 		"AWLT_LS_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "AdventureWorksLT"
+			"defaultValue": "db_free_adventureworkslt"
 		},
 		"AWLT_LS_properties_typeProperties_userName": {
 			"type": "string",
@@ -37,15 +45,11 @@
 		},
 		"BRONZE_LS_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "BRONZE"
+			"defaultValue": "db_free_bronze"
 		},
 		"BRONZE_LS_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "as1src"
-		},
-		"LakeStore_LS_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://lakestore.dfs.core.windows.net/"
 		},
 		"Metadata_LS_properties_typeProperties_server": {
 			"type": "string",
@@ -53,7 +57,7 @@
 		},
 		"Metadata_LS_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "MetaData"
+			"defaultValue": "db_free_metadata"
 		},
 		"Metadata_LS_properties_typeProperties_userName": {
 			"type": "string",
@@ -70,6 +74,14 @@
 		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "@{linkedService().UserName}"
+		},
+		"ls_adls_bronze_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"ls_adls_metadata_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
 		},
 		"containerUri": {
 			"type": "string",
@@ -107,6 +119,12 @@
 					"Metadata_LS_password": {
 						"value": "[parameters('Metadata_LS_password')]"
 					},
+					"ls_adls_bronze_accountKey": {
+						"value": "[parameters('ls_adls_bronze_accountKey')]"
+					},
+					"ls_adls_metadata_accountKey": {
+						"value": "[parameters('ls_adls_metadata_accountKey')]"
+					},
 					"AWLT_LS_properties_typeProperties_server": {
 						"value": "[parameters('AWLT_LS_properties_typeProperties_server')]"
 					},
@@ -125,9 +143,6 @@
 					"BRONZE_LS_properties_typeProperties_userName": {
 						"value": "[parameters('BRONZE_LS_properties_typeProperties_userName')]"
 					},
-					"LakeStore_LS_properties_typeProperties_url": {
-						"value": "[parameters('LakeStore_LS_properties_typeProperties_url')]"
-					},
 					"Metadata_LS_properties_typeProperties_server": {
 						"value": "[parameters('Metadata_LS_properties_typeProperties_server')]"
 					},
@@ -145,6 +160,12 @@
 					},
 					"dls_asql_Bronze_properties_typeProperties_userName": {
 						"value": "[parameters('dls_asql_Bronze_properties_typeProperties_userName')]"
+					},
+					"ls_adls_bronze_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_bronze_properties_typeProperties_url')]"
+					},
+					"ls_adls_metadata_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_metadata_properties_typeProperties_url')]"
 					}
 				}
 			},

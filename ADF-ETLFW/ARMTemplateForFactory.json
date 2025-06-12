@@ -19,13 +19,21 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'Metadata_LS'"
 		},
+		"ls_adls_bronze_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_bronze'"
+		},
+		"ls_adls_metadata_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_metadata'"
+		},
 		"AWLT_LS_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "as1src.database.windows.net"
 		},
 		"AWLT_LS_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "AdventureWorksLT"
+			"defaultValue": "db_free_adventureworkslt"
 		},
 		"AWLT_LS_properties_typeProperties_userName": {
 			"type": "string",
@@ -37,15 +45,11 @@
 		},
 		"BRONZE_LS_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "BRONZE"
+			"defaultValue": "db_free_bronze"
 		},
 		"BRONZE_LS_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "as1src"
-		},
-		"LakeStore_LS_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://lakestore.dfs.core.windows.net/"
 		},
 		"Metadata_LS_properties_typeProperties_server": {
 			"type": "string",
@@ -53,7 +57,7 @@
 		},
 		"Metadata_LS_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "MetaData"
+			"defaultValue": "db_free_metadata"
 		},
 		"Metadata_LS_properties_typeProperties_userName": {
 			"type": "string",
@@ -70,6 +74,14 @@
 		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "@{linkedService().UserName}"
+		},
+		"ls_adls_bronze_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"ls_adls_metadata_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
 		}
 	},
 	"variables": {
@@ -1265,25 +1277,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/LakeStore_LS')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobFS",
-				"typeProperties": {
-					"url": "[parameters('LakeStore_LS_properties_typeProperties_url')]"
-				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/Metadata_LS')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1381,6 +1374,376 @@
 			"apiVersion": "2018-06-01",
 			"properties": {},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adls_bronze')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_adls_bronze_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_adls_bronze_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adls_metadata')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_adls_metadata_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_adls_metadata_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_main_orchestrator')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "act_get_main_config",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "dds_etl_fw_metadata",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": {
+										"value": "@pipeline().parameters.metadataLocation",
+										"type": "Expression"
+									},
+									"path": {
+										"value": "@pipeline().parameters.metadataPath",
+										"type": "Expression"
+									},
+									"configName": {
+										"value": "@pipeline().parameters.metadataFilename",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "act_execute_stage_inorder",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "act_get_main_config",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('act_get_main_config').output.firstRow.executionOrder",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "act_get_tasks",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": false,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"dataset": {
+											"referenceName": "dds_etl_fw_metadata",
+											"type": "DatasetReference",
+											"parameters": {
+												"location": {
+													"value": "@pipeline().parameters.metadataLocation",
+													"type": "Expression"
+												},
+												"path": {
+													"value": "@concat(pipeline().parameters.metadataPath, '/task')",
+													"type": "Expression"
+												},
+												"configName": {
+													"value": "@concat(item().stage, '.json')",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": false
+									}
+								},
+								{
+									"name": "act_invalid_stage",
+									"type": "Fail",
+									"dependsOn": [
+										{
+											"activity": "act_get_tasks",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"message": {
+											"value": "@concat('Invalid stage: ', item().stage)",
+											"type": "Expression"
+										},
+										"errorCode": "101"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadataLocation": {
+						"type": "string",
+						"defaultValue": "metadata"
+					},
+					"metadataPath": {
+						"type": "string",
+						"defaultValue": "config"
+					},
+					"metadataFilename": {
+						"type": "string",
+						"defaultValue": "main.json"
+					},
+					"maxConcurrentTasks": {
+						"type": "int",
+						"defaultValue": 20
+					}
+				},
+				"folder": {
+					"name": "top"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dds_etl_fw_metadata')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_metadata",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"location": {
+						"type": "string"
+					},
+					"path": {
+						"type": "string"
+					},
+					"configName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ETLFWDS"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().configName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().path",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().location",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_metadata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_filter_task')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "act_get_metadata",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "dds_etl_fw_metadata",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": {
+										"value": "@pipeline().parameters.metadataLocation",
+										"type": "Expression"
+									},
+									"path": {
+										"value": "@pipeline().parameters.metadataPath",
+										"type": "Expression"
+									},
+									"configName": {
+										"value": "@pipeline().parameters.metadataFilename",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "act_filter_tasks",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "act_get_metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('act_get_metadata').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().type, pipeline().parameters.taskType)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadataLocation": {
+						"type": "string",
+						"defaultValue": "metadata"
+					},
+					"metadataPath": {
+						"type": "string",
+						"defaultValue": "config"
+					},
+					"metadataFilename": {
+						"type": "string"
+					},
+					"taskType": {
+						"type": "string"
+					},
+					"maxConcurrentTasks": {
+						"type": "int",
+						"defaultValue": 20
+					}
+				},
+				"folder": {
+					"name": "level 1"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+			]
 		}
 	]
 }
