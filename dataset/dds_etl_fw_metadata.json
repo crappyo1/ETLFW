@@ -6,7 +6,13 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"rootPath": {
+			"location": {
+				"type": "string"
+			},
+			"path": {
+				"type": "string"
+			},
+			"configName": {
 				"type": "string"
 			}
 		},
@@ -18,10 +24,16 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "task.json",
-				"folderPath": "config",
+				"fileName": {
+					"value": "@dataset().configName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().path",
+					"type": "Expression"
+				},
 				"fileSystem": {
-					"value": "@dataset().rootPath",
+					"value": "@dataset().location",
 					"type": "Expression"
 				}
 			}
