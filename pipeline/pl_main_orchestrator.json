@@ -163,8 +163,8 @@
 															"value": "@activity('act_get_tasks').output.value",
 															"type": "Expression"
 														},
-														"dataLinks": {
-															"value": "@variables('dataLinks')",
+														"datalinks": {
+															"value": "@variables('datalinks')",
 															"type": "Expression"
 														}
 													}
@@ -210,9 +210,9 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"variableName": "dataLinks",
+					"variableName": "datalinks",
 					"value": {
-						"value": "@activity('act_get_main_config').output.firstRow.dataLinks",
+						"value": "@activity('act_get_main_config').output.firstRow.datalinks",
 						"type": "Expression"
 					}
 				}
@@ -233,7 +233,7 @@
 			}
 		},
 		"variables": {
-			"dataLinks": {
+			"datalinks": {
 				"type": "Array"
 			}
 		},

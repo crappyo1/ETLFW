@@ -44,6 +44,10 @@
 									"taskToProcess": {
 										"value": "@item()",
 										"type": "Expression"
+									},
+									"datalinks": {
+										"value": "@pipeline().parameters.datalinks",
+										"type": "Expression"
 									}
 								}
 							}
@@ -68,7 +72,7 @@
 			"tasksToProcess": {
 				"type": "array"
 			},
-			"dataLinks": {
+			"datalinks": {
 				"type": "array"
 			}
 		},

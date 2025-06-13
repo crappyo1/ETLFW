@@ -53,11 +53,11 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@pipeline().parameters.dataLinks",
+						"value": "@pipeline().parameters.datalinks",
 						"type": "Expression"
 					},
 					"condition": {
-						"value": "@equals(item().dataLinkId, pipeline().parameters.taskToProcess.dataLinkId)",
+						"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sourceDatalinkId)",
 						"type": "Expression"
 					}
 				}
@@ -79,7 +79,7 @@
 			"taskToProcess": {
 				"type": "object"
 			},
-			"dataLinks": {
+			"datalinks": {
 				"type": "array"
 			}
 		},
