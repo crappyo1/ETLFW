@@ -65,15 +65,15 @@
 		},
 		"dls_asql_Bronze_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "@{linkedService().ServerName}"
+			"defaultValue": "@{linkedService().serverName}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "@{linkedService().DatabaseName}"
+			"defaultValue": "@{linkedService().databaseName}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
-			"defaultValue": "@{linkedService().UserName}"
+			"defaultValue": "@{linkedService().un}"
 		},
 		"ls_adls_bronze_properties_typeProperties_url": {
 			"type": "string",
@@ -82,6 +82,18 @@
 		"ls_adls_metadata_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"dls_asql_source_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "as1src.database.windows.net"
+		},
+		"dls_asql_source_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "db_free_adventureworkslt"
+		},
+		"dls_asql_source_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().un}"
 		}
 	},
 	"variables": {
@@ -1024,6 +1036,796 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_filter_task')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "act_get_metadata",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "dds_etl_fw_metadata",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": {
+										"value": "@pipeline().parameters.metadataLocation",
+										"type": "Expression"
+									},
+									"path": {
+										"value": "@pipeline().parameters.metadataPath",
+										"type": "Expression"
+									},
+									"configName": {
+										"value": "@pipeline().parameters.metadataFilename",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "act_filter_tasks",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "act_get_metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('act_get_metadata').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().type, pipeline().parameters.taskType)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadataLocation": {
+						"type": "string",
+						"defaultValue": "metadata"
+					},
+					"metadataPath": {
+						"type": "string",
+						"defaultValue": "config"
+					},
+					"metadataFilename": {
+						"type": "string"
+					},
+					"taskType": {
+						"type": "string"
+					},
+					"maxConcurrentTasks": {
+						"type": "int",
+						"defaultValue": 20
+					}
+				},
+				"folder": {
+					"name": "level 1"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_main_orchestrator')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "act_get_main_config",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "dds_etl_fw_metadata",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": {
+										"value": "@pipeline().parameters.metadataLocation",
+										"type": "Expression"
+									},
+									"path": {
+										"value": "@pipeline().parameters.metadataPath",
+										"type": "Expression"
+									},
+									"configName": {
+										"value": "main.json",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "act_execute_stage_inorder",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "act_set_data_links",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('act_get_main_config').output.firstRow.executionOrder",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "act_get_tasks",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": false,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"dataset": {
+											"referenceName": "dds_etl_fw_metadata",
+											"type": "DatasetReference",
+											"parameters": {
+												"location": {
+													"value": "@pipeline().parameters.metadataLocation",
+													"type": "Expression"
+												},
+												"path": {
+													"value": "@concat(pipeline().parameters.metadataPath, '/task')",
+													"type": "Expression"
+												},
+												"configName": {
+													"value": "@concat(item().stage, '.json')",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": false
+									}
+								},
+								{
+									"name": "act_pipeline_for_stage",
+									"type": "Switch",
+									"dependsOn": [
+										{
+											"activity": "act_get_tasks",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"on": {
+											"value": "@item().stage",
+											"type": "Expression"
+										},
+										"cases": [
+											{
+												"value": "ingest",
+												"activities": [
+													{
+														"name": "act_exec_process_ingest_tasks_pl",
+														"type": "ExecutePipeline",
+														"dependsOn": [],
+														"policy": {
+															"secureInput": false
+														},
+														"userProperties": [],
+														"typeProperties": {
+															"pipeline": {
+																"referenceName": "pl_process_ingest_tasks",
+																"type": "PipelineReference"
+															},
+															"waitOnCompletion": true,
+															"parameters": {
+																"metadataLocation": {
+																	"value": "@pipeline().parameters.metadataLocation",
+																	"type": "Expression"
+																},
+																"metadataPath": {
+																	"value": "@pipeline().parameters.metadataPath",
+																	"type": "Expression"
+																},
+																"maxConcurrentTasks": {
+																	"value": "@pipeline().parameters.maxConcurrentTasks",
+																	"type": "Expression"
+																},
+																"tasksToProcess": {
+																	"value": "@activity('act_get_tasks').output.value",
+																	"type": "Expression"
+																},
+																"datalinks": {
+																	"value": "@variables('datalinks')",
+																	"type": "Expression"
+																}
+															}
+														}
+													}
+												]
+											}
+										],
+										"defaultActivities": [
+											{
+												"name": "act_invalid_stage",
+												"type": "Fail",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"message": {
+														"value": "@concat('Invalid Stage: ', item().stage)",
+														"type": "Expression"
+													},
+													"errorCode": "400"
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "act_set_data_links",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "act_get_main_config",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "datalinks",
+							"value": {
+								"value": "@activity('act_get_main_config').output.firstRow.datalinks",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadataLocation": {
+						"type": "string",
+						"defaultValue": "metadata"
+					},
+					"metadataPath": {
+						"type": "string",
+						"defaultValue": "config"
+					},
+					"maxConcurrentTasks": {
+						"type": "int",
+						"defaultValue": 20
+					}
+				},
+				"variables": {
+					"datalinks": {
+						"type": "Array"
+					}
+				},
+				"folder": {
+					"name": "top"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_process_ingest_tasks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_process_ingest_tasks')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "act_process_each_ingest_task",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.tasksToProcess",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "act_execute_task",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "act_get_objects",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "pl_process_one_ingest_task",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"metadataLocation": {
+												"value": "@pipeline().parameters.metadataLocation",
+												"type": "Expression"
+											},
+											"metadataPath": {
+												"value": "@pipeline().parameters.metadataPath",
+												"type": "Expression"
+											},
+											"maxConcurrentTasks": {
+												"value": "@pipeline().parameters.maxConcurrentTasks",
+												"type": "Expression"
+											},
+											"taskToProcess": {
+												"value": "@item()",
+												"type": "Expression"
+											},
+											"datalinks": {
+												"value": "@pipeline().parameters.datalinks",
+												"type": "Expression"
+											},
+											"objects": {
+												"value": "@activity('act_get_objects').output.value",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "act_get_objects",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"dataset": {
+											"referenceName": "dds_etl_fw_metadata",
+											"type": "DatasetReference",
+											"parameters": {
+												"location": {
+													"value": "@pipeline().parameters.metadataLocation",
+													"type": "Expression"
+												},
+												"path": {
+													"value": "@concat(pipeline().parameters.metadataPath,'/object')",
+													"type": "Expression"
+												},
+												"configName": {
+													"value": "ingest.json",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": false
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadataLocation": {
+						"type": "string",
+						"defaultValue": "metadata"
+					},
+					"metadataPath": {
+						"type": "string",
+						"defaultValue": "config"
+					},
+					"maxConcurrentTasks": {
+						"type": "int",
+						"defaultValue": 20
+					},
+					"tasksToProcess": {
+						"type": "array"
+					},
+					"datalinks": {
+						"type": "array"
+					}
+				},
+				"folder": {
+					"name": "level 1"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_process_one_ingest_task')]",
+				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_process_one_ingest_task')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "act_get_object_mapping",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "dds_etl_fw_metadata",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": {
+										"value": "@pipeline().parameters.metadataLocation",
+										"type": "Expression"
+									},
+									"path": {
+										"value": "@concat(pipeline().parameters.metadataPath,'/mapping')",
+										"type": "Expression"
+									},
+									"configName": {
+										"value": "@concat(pipeline().parameters.taskToProcess.mappingId, '.json')",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "act_filter_source_datalink",
+						"type": "Filter",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.datalinks",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sourceDatalinkId)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "act_filter_sink_datalink",
+						"type": "Filter",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.datalinks",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sinkDatalinkId)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "act_ingest_object",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "act_get_object_mapping",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "act_filter_source_datalink",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "act_filter_sink_datalink",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "act_filter_source_object",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "act_filter_sink_object",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"value": "@json(concat('{ \n    \"type\": \"TabularTranslator\", \n    \"mappings\":',\n    string(activity('act_get_object_mapping').output.value),',\n    \"typeConversion\": true,\n    \"typeConversionSettings\": {\n        \"allowDataTruncation\": true,\n        \"treatBooleanAsNumber\": false\n    }\n}'))\n",
+								"type": "Expression"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "dds_asql_Source",
+								"type": "DatasetReference",
+								"parameters": {
+									"schemaName": {
+										"value": "@activity('act_filter_source_object').output.value[0].schemaName",
+										"type": "Expression"
+									},
+									"objectName": {
+										"value": "@activity('act_filter_source_object').output.value[0].objectName",
+										"type": "Expression"
+									},
+									"serverName": {
+										"value": "@activity('act_filter_source_datalink').output.value[0].uri",
+										"type": "Expression"
+									},
+									"databaseName": {
+										"value": "@activity('act_filter_source_datalink').output.value[0].catalog",
+										"type": "Expression"
+									},
+									"un": {
+										"value": "@activity('act_filter_source_datalink').output.value[0].un",
+										"type": "Expression"
+									},
+									"up": {
+										"value": "@activity('act_filter_source_datalink').output.value[0].up",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "dds_asql_Bronze",
+								"type": "DatasetReference",
+								"parameters": {
+									"schemaName": {
+										"value": "@activity('act_filter_sink_object').output.value[0].schemaName",
+										"type": "Expression"
+									},
+									"objectName": {
+										"value": "@activity('act_filter_sink_object').output.value[0].objectName",
+										"type": "Expression"
+									},
+									"serverName": {
+										"value": "@activity('act_filter_sink_datalink').output.value[0].uri",
+										"type": "Expression"
+									},
+									"databaseName": {
+										"value": "@activity('act_filter_sink_datalink').output.value[0].catalog",
+										"type": "Expression"
+									},
+									"un": {
+										"value": "@activity('act_filter_sink_datalink').output.value[0].un",
+										"type": "Expression"
+									},
+									"up": {
+										"value": "@activity('act_filter_sink_datalink').output.value[0].up",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "act_filter_source_object",
+						"type": "Filter",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.objects",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().objectId, pipeline().parameters.taskToProcess.sourceObjectId)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "act_filter_sink_object",
+						"type": "Filter",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.objects",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().objectId, pipeline().parameters.taskToProcess.sinkObjectId)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadataLocation": {
+						"type": "string",
+						"defaultValue": "metadata"
+					},
+					"metadataPath": {
+						"type": "string",
+						"defaultValue": "config"
+					},
+					"maxConcurrentTasks": {
+						"type": "string",
+						"defaultValue": "20"
+					},
+					"taskToProcess": {
+						"type": "object"
+					},
+					"datalinks": {
+						"type": "array"
+					},
+					"objects": {
+						"type": "array"
+					}
+				},
+				"folder": {
+					"name": "level 1"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]",
+				"[concat(variables('factoryId'), '/datasets/dds_asql_Source')]",
+				"[concat(variables('factoryId'), '/datasets/dds_asql_Bronze')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/MetadataDS')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1056,41 +1858,41 @@
 					"referenceName": "dls_asql_Bronze",
 					"type": "LinkedServiceReference",
 					"parameters": {
-						"ServerName": {
-							"value": "@dataset().ServerName",
+						"serverName": {
+							"value": "@dataset().serverName",
 							"type": "Expression"
 						},
-						"DatabaseName": {
-							"value": "@dataset().DatabaseName",
+						"databaseName": {
+							"value": "@dataset().databaseName",
 							"type": "Expression"
 						},
-						"UserName": {
-							"value": "@dataset().UserName",
+						"un": {
+							"value": "@dataset().un",
 							"type": "Expression"
 						},
-						"UserPassword": {
-							"value": "@dataset().UserPassword",
+						"up": {
+							"value": "@dataset().up",
 							"type": "Expression"
 						}
 					}
 				},
 				"parameters": {
-					"SchemaName": {
+					"schemaName": {
 						"type": "String"
 					},
-					"ObjectName": {
+					"objectName": {
 						"type": "String"
 					},
-					"ServerName": {
+					"serverName": {
 						"type": "string"
 					},
-					"DatabaseName": {
+					"databaseName": {
 						"type": "string"
 					},
-					"UserName": {
+					"un": {
 						"type": "string"
 					},
-					"UserPassword": {
+					"up": {
 						"type": "string"
 					}
 				},
@@ -1102,11 +1904,11 @@
 				"schema": [],
 				"typeProperties": {
 					"schema": {
-						"value": "@dataset().SchemaName",
+						"value": "@dataset().schemaName",
 						"type": "Expression"
 					},
 					"table": {
-						"value": "@dataset().ObjectName",
+						"value": "@dataset().objectName",
 						"type": "Expression"
 					}
 				}
@@ -1121,12 +1923,45 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "AWLT_LS",
-					"type": "LinkedServiceReference"
+					"referenceName": "dls_asql_source",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"serverName": {
+							"value": "@dataset().serverName",
+							"type": "Expression"
+						},
+						"databaseName": {
+							"value": "@dataset().databaseName",
+							"type": "Expression"
+						},
+						"un": {
+							"value": "@dataset().un",
+							"type": "Expression"
+						},
+						"up": {
+							"value": "@dataset().up",
+							"type": "Expression"
+						}
+					}
 				},
 				"parameters": {
-					"Config": {
-						"type": "object"
+					"schemaName": {
+						"type": "string"
+					},
+					"objectName": {
+						"type": "string"
+					},
+					"serverName": {
+						"type": "string"
+					},
+					"databaseName": {
+						"type": "string"
+					},
+					"un": {
+						"type": "string"
+					},
+					"up": {
+						"type": "string"
 					}
 				},
 				"folder": {
@@ -1137,17 +1972,65 @@
 				"schema": [],
 				"typeProperties": {
 					"schema": {
-						"value": "@dataset().Config.schemaName",
+						"value": "@dataset().schemaName",
 						"type": "Expression"
 					},
 					"table": {
-						"value": "@dataset().Config.objectName",
+						"value": "@dataset().objectName",
 						"type": "Expression"
 					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AWLT_LS')]"
+				"[concat(variables('factoryId'), '/linkedServices/dls_asql_source')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dds_etl_fw_metadata')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_metadata",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"location": {
+						"type": "string"
+					},
+					"path": {
+						"type": "string"
+					},
+					"configName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ETLFWDS"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().configName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().path",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().location",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_metadata')]"
 			]
 		},
 		{
@@ -1310,16 +2193,16 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"parameters": {
-					"ServerName": {
+					"serverName": {
 						"type": "string"
 					},
-					"DatabaseName": {
+					"databaseName": {
 						"type": "string"
 					},
-					"UserName": {
+					"un": {
 						"type": "string"
 					},
-					"UserPassword": {
+					"up": {
 						"type": "string"
 					}
 				},
@@ -1332,7 +2215,7 @@
 					"trustServerCertificate": false,
 					"authenticationType": "SQL",
 					"userName": "[parameters('dls_asql_Bronze_properties_typeProperties_userName')]",
-					"password": "@{linkedService().UserPassword}"
+					"password": "@{linkedService().up}"
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -1342,38 +2225,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
 			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "Managed",
-				"typeProperties": {
-					"computeProperties": {
-						"location": "AutoResolve",
-						"dataFlowProperties": {
-							"computeType": "General",
-							"coreCount": 8,
-							"timeToLive": 0
-						}
-					}
-				},
-				"managedVirtualNetwork": {
-					"type": "ManagedVirtualNetworkReference",
-					"referenceName": "default"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/default')]",
-			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
-			"apiVersion": "2018-06-01",
-			"properties": {},
-			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ls_adls_bronze')]",
@@ -1422,327 +2273,74 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pl_main_orchestrator')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"activities": [
-					{
-						"name": "act_get_main_config",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "dds_etl_fw_metadata",
-								"type": "DatasetReference",
-								"parameters": {
-									"location": {
-										"value": "@pipeline().parameters.metadataLocation",
-										"type": "Expression"
-									},
-									"path": {
-										"value": "@pipeline().parameters.metadataPath",
-										"type": "Expression"
-									},
-									"configName": {
-										"value": "@pipeline().parameters.metadataFilename",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "act_execute_stage_inorder",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "act_get_main_config",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('act_get_main_config').output.firstRow.executionOrder",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "act_get_tasks",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "JsonSource",
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": false,
-												"enablePartitionDiscovery": false
-											},
-											"formatSettings": {
-												"type": "JsonReadSettings"
-											}
-										},
-										"dataset": {
-											"referenceName": "dds_etl_fw_metadata",
-											"type": "DatasetReference",
-											"parameters": {
-												"location": {
-													"value": "@pipeline().parameters.metadataLocation",
-													"type": "Expression"
-												},
-												"path": {
-													"value": "@concat(pipeline().parameters.metadataPath, '/task')",
-													"type": "Expression"
-												},
-												"configName": {
-													"value": "@concat(item().stage, '.json')",
-													"type": "Expression"
-												}
-											}
-										},
-										"firstRowOnly": false
-									}
-								},
-								{
-									"name": "act_invalid_stage",
-									"type": "Fail",
-									"dependsOn": [
-										{
-											"activity": "act_get_tasks",
-											"dependencyConditions": [
-												"Failed"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"message": {
-											"value": "@concat('Invalid stage: ', item().stage)",
-											"type": "Expression"
-										},
-										"errorCode": "101"
-									}
-								}
-							]
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
 						}
 					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
 				},
-				"parameters": {
-					"metadataLocation": {
-						"type": "string",
-						"defaultValue": "metadata"
-					},
-					"metadataPath": {
-						"type": "string",
-						"defaultValue": "config"
-					},
-					"metadataFilename": {
-						"type": "string",
-						"defaultValue": "main.json"
-					},
-					"maxConcurrentTasks": {
-						"type": "int",
-						"defaultValue": 20
-					}
-				},
-				"folder": {
-					"name": "top"
-				},
-				"annotations": []
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dds_etl_fw_metadata')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dls_asql_source')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_metadata",
-					"type": "LinkedServiceReference"
-				},
 				"parameters": {
-					"location": {
+					"serverName": {
 						"type": "string"
 					},
-					"path": {
+					"databaseName": {
 						"type": "string"
 					},
-					"configName": {
+					"un": {
+						"type": "string"
+					},
+					"up": {
 						"type": "string"
 					}
-				},
-				"folder": {
-					"name": "ETLFWDS"
 				},
 				"annotations": [],
-				"type": "Json",
+				"type": "AzureSqlDatabase",
 				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().configName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().path",
-							"type": "Expression"
-						},
-						"fileSystem": {
-							"value": "@dataset().location",
-							"type": "Expression"
-						}
-					}
+					"server": "[parameters('dls_asql_source_properties_typeProperties_server')]",
+					"database": "[parameters('dls_asql_source_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('dls_asql_source_properties_typeProperties_userName')]",
+					"password": "@{linkedService().up}"
 				},
-				"schema": {}
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_metadata')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_filter_task')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "act_get_metadata",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "dds_etl_fw_metadata",
-								"type": "DatasetReference",
-								"parameters": {
-									"location": {
-										"value": "@pipeline().parameters.metadataLocation",
-										"type": "Expression"
-									},
-									"path": {
-										"value": "@pipeline().parameters.metadataPath",
-										"type": "Expression"
-									},
-									"configName": {
-										"value": "@pipeline().parameters.metadataFilename",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "act_filter_tasks",
-						"type": "Filter",
-						"dependsOn": [
-							{
-								"activity": "act_get_metadata",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('act_get_metadata').output.value",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@equals(item().type, pipeline().parameters.taskType)",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"metadataLocation": {
-						"type": "string",
-						"defaultValue": "metadata"
-					},
-					"metadataPath": {
-						"type": "string",
-						"defaultValue": "config"
-					},
-					"metadataFilename": {
-						"type": "string"
-					},
-					"taskType": {
-						"type": "string"
-					},
-					"maxConcurrentTasks": {
-						"type": "int",
-						"defaultValue": 20
-					}
-				},
-				"folder": {
-					"name": "level 1"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
 			]
 		}
 	]

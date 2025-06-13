@@ -65,15 +65,15 @@
 		},
 		"dls_asql_Bronze_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "@{linkedService().ServerName}"
+			"defaultValue": "@{linkedService().serverName}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "@{linkedService().DatabaseName}"
+			"defaultValue": "@{linkedService().databaseName}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
-			"defaultValue": "@{linkedService().UserName}"
+			"defaultValue": "@{linkedService().un}"
 		},
 		"ls_adls_bronze_properties_typeProperties_url": {
 			"type": "string",
@@ -82,6 +82,18 @@
 		"ls_adls_metadata_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"dls_asql_source_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "as1src.database.windows.net"
+		},
+		"dls_asql_source_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "db_free_adventureworkslt"
+		},
+		"dls_asql_source_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().un}"
 		},
 		"containerUri": {
 			"type": "string",
@@ -166,10 +178,39 @@
 					},
 					"ls_adls_metadata_properties_typeProperties_url": {
 						"value": "[parameters('ls_adls_metadata_properties_typeProperties_url')]"
+					},
+					"dls_asql_source_properties_typeProperties_server": {
+						"value": "[parameters('dls_asql_source_properties_typeProperties_server')]"
+					},
+					"dls_asql_source_properties_typeProperties_database": {
+						"value": "[parameters('dls_asql_source_properties_typeProperties_database')]"
+					},
+					"dls_asql_source_properties_typeProperties_userName": {
+						"value": "[parameters('dls_asql_source_properties_typeProperties_userName')]"
 					}
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "ADF-ETLFW_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ADF-ETLFW_ArmTemplate_0')]"
+			]
 		}
 	]
 }

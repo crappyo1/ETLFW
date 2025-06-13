@@ -48,19 +48,28 @@
 			"value": "as1src"
 		},
 		"dls_asql_Bronze_properties_typeProperties_server": {
-			"value": "@{linkedService().ServerName}"
+			"value": "@{linkedService().serverName}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_database": {
-			"value": "@{linkedService().DatabaseName}"
+			"value": "@{linkedService().databaseName}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_userName": {
-			"value": "@{linkedService().UserName}"
+			"value": "@{linkedService().un}"
 		},
 		"ls_adls_bronze_properties_typeProperties_url": {
 			"value": "https://sacclakehouse.dfs.core.windows.net/"
 		},
 		"ls_adls_metadata_properties_typeProperties_url": {
 			"value": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"dls_asql_source_properties_typeProperties_server": {
+			"value": "as1src.database.windows.net"
+		},
+		"dls_asql_source_properties_typeProperties_database": {
+			"value": "db_free_adventureworkslt"
+		},
+		"dls_asql_source_properties_typeProperties_userName": {
+			"value": "@{linkedService().un}"
 		},
 		"containerUri": {
 			"value": ""
