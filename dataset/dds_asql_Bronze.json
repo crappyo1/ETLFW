@@ -5,41 +5,41 @@
 			"referenceName": "dls_asql_Bronze",
 			"type": "LinkedServiceReference",
 			"parameters": {
-				"ServerName": {
-					"value": "@dataset().ServerName",
+				"serverName": {
+					"value": "@dataset().serverName",
 					"type": "Expression"
 				},
-				"DatabaseName": {
-					"value": "@dataset().DatabaseName",
+				"databaseName": {
+					"value": "@dataset().databaseName",
 					"type": "Expression"
 				},
-				"UserName": {
-					"value": "@dataset().UserName",
+				"un": {
+					"value": "@dataset().un",
 					"type": "Expression"
 				},
-				"UserPassword": {
-					"value": "@dataset().UserPassword",
+				"up": {
+					"value": "@dataset().up",
 					"type": "Expression"
 				}
 			}
 		},
 		"parameters": {
-			"SchemaName": {
+			"schemaName": {
 				"type": "String"
 			},
-			"ObjectName": {
+			"objectName": {
 				"type": "String"
 			},
-			"ServerName": {
+			"serverName": {
 				"type": "string"
 			},
-			"DatabaseName": {
+			"databaseName": {
 				"type": "string"
 			},
-			"UserName": {
+			"un": {
 				"type": "string"
 			},
-			"UserPassword": {
+			"up": {
 				"type": "string"
 			}
 		},
@@ -51,11 +51,11 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": {
-				"value": "@dataset().SchemaName",
+				"value": "@dataset().schemaName",
 				"type": "Expression"
 			},
 			"table": {
-				"value": "@dataset().ObjectName",
+				"value": "@dataset().objectName",
 				"type": "Expression"
 			}
 		}

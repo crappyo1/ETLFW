@@ -2,12 +2,45 @@
 	"name": "dds_asql_Source",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "AWLT_LS",
-			"type": "LinkedServiceReference"
+			"referenceName": "dls_asql_source",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"serverName": {
+					"value": "@dataset().serverName",
+					"type": "Expression"
+				},
+				"databaseName": {
+					"value": "@dataset().databaseName",
+					"type": "Expression"
+				},
+				"un": {
+					"value": "@dataset().un",
+					"type": "Expression"
+				},
+				"up": {
+					"value": "@dataset().up",
+					"type": "Expression"
+				}
+			}
 		},
 		"parameters": {
-			"Config": {
-				"type": "object"
+			"schemaName": {
+				"type": "string"
+			},
+			"objectName": {
+				"type": "string"
+			},
+			"serverName": {
+				"type": "string"
+			},
+			"databaseName": {
+				"type": "string"
+			},
+			"un": {
+				"type": "string"
+			},
+			"up": {
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -18,11 +51,11 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": {
-				"value": "@dataset().Config.schemaName",
+				"value": "@dataset().schemaName",
 				"type": "Expression"
 			},
 			"table": {
-				"value": "@dataset().Config.objectName",
+				"value": "@dataset().objectName",
 				"type": "Expression"
 			}
 		}
