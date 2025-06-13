@@ -3,29 +3,29 @@
 	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
-			"ServerName": {
+			"serverName": {
 				"type": "string"
 			},
-			"DatabaseName": {
+			"databaseName": {
 				"type": "string"
 			},
-			"UserName": {
+			"un": {
 				"type": "string"
 			},
-			"UserPassword": {
+			"up": {
 				"type": "string"
 			}
 		},
 		"annotations": [],
 		"type": "AzureSqlDatabase",
 		"typeProperties": {
-			"server": "@{linkedService().ServerName}",
-			"database": "@{linkedService().DatabaseName}",
+			"server": "@{linkedService().serverName}",
+			"database": "@{linkedService().databaseName}",
 			"encrypt": "mandatory",
 			"trustServerCertificate": false,
 			"authenticationType": "SQL",
-			"userName": "@{linkedService().UserName}",
-			"password": "@{linkedService().UserPassword}"
+			"userName": "@{linkedService().un}",
+			"password": "@{linkedService().up}"
 		},
 		"connectVia": {
 			"referenceName": "AutoResolveIntegrationRuntime",
