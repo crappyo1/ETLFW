@@ -18,8 +18,8 @@
 		"annotations": [],
 		"type": "AzureSqlDatabase",
 		"typeProperties": {
-			"server": "@{linkedService().serverName}",
-			"database": "@{linkedService().databaseName}",
+			"server": "@{linkedService().uri}",
+			"database": "@{linkedService().catalog}",
 			"encrypt": "mandatory",
 			"trustServerCertificate": false,
 			"authenticationType": "SQL",
