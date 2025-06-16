@@ -1,0 +1,48 @@
+{
+	"name": "dls_asql_Gold",
+	"properties": {
+		"parameters": {
+			"uri": {
+				"type": "string",
+				"defaultValue": "placeholder"
+			},
+			"catalog": {
+				"type": "string",
+				"defaultValue": "placeholder"
+			},
+			"un": {
+				"type": "string",
+				"defaultValue": "placeholder"
+			},
+			"up": {
+				"type": "string",
+				"defaultValue": "placeholder"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "as1src.database.windows.net",
+			"database": "master",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "@{linkedService().un}",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_akv",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().up",
+					"type": "Expression"
+				}
+			}
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
