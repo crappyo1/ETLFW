@@ -3,10 +3,10 @@
 	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
-			"serverName": {
+			"uri": {
 				"type": "string"
 			},
-			"databaseName": {
+			"catalog": {
 				"type": "string"
 			},
 			"un": {
