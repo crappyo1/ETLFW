@@ -1,5 +1,6 @@
 {
 	"name": "dls_salesforce",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
 			"salesforceUri": {
@@ -8,11 +9,11 @@
 			},
 			"salseforceClientId": {
 				"type": "string",
-				"defaultValue": "Client Id Placeholder"
+				"defaultValue": "3MVG9dAEux2v1sLtwRN.YTCR9x3NiiiegXV5K7kdpP.dLjHdkfxNl7Ehti5bkfW0cHjLZxyRv5WtTHI64KdVw"
 			},
 			"salseforceClientS": {
 				"type": "string",
-				"defaultValue": "Client S"
+				"defaultValue": "90EF4B469ED0BC541F1A746715E51059D6816E532DB92EBBC256B88F8B066BCA"
 			},
 			"salesforceApiVersion": {
 				"type": "string",
@@ -24,16 +25,9 @@
 		"typeProperties": {
 			"environmentUrl": "@{linkedService().salesforceUri}",
 			"clientId": "@{linkedService().salseforceClientId}",
-			"clientSecret": {
-				"type": "AzureKeyVaultSecret",
-				"store": {
-					"referenceName": "ls_akv",
-					"type": "LinkedServiceReference"
-				},
-				"secretName": "s-sf-etl-fw"
-			},
 			"apiVersion": "@{linkedService().salesforceApiVersion}",
-			"authenticationType": "OAuth2ClientCredential"
+			"authenticationType": "OAuth2ClientCredential",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDhGQUZDMzA1LTQwQjItNEVEOC1CNUMxLTIxOTUyMDU5QTU1QV9mZTEwMjA1MC1hZDFmLTQ0ZTQtYTY3Ny1mZmUwODUzMWE1YWQiDQp9"
 		},
 		"connectVia": {
 			"referenceName": "AutoResolveIntegrationRuntime",
