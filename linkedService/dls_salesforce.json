@@ -1,0 +1,43 @@
+{
+	"name": "dls_salesforce",
+	"properties": {
+		"parameters": {
+			"salesforceUri": {
+				"type": "string",
+				"defaultValue": "https://orgfarm-6f3910437b-dev-ed.develop.lightning.force.com/"
+			},
+			"salseforceClientId": {
+				"type": "string",
+				"defaultValue": "Client Id Placeholder"
+			},
+			"salseforceClientS": {
+				"type": "string",
+				"defaultValue": "Client S"
+			},
+			"salesforceApiVersion": {
+				"type": "string",
+				"defaultValue": "54.0"
+			}
+		},
+		"annotations": [],
+		"type": "SalesforceV2",
+		"typeProperties": {
+			"environmentUrl": "@{linkedService().salesforceUri}",
+			"clientId": "@{linkedService().salseforceClientId}",
+			"clientSecret": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_akv",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "s-sf-etl-fw"
+			},
+			"apiVersion": "@{linkedService().salesforceApiVersion}",
+			"authenticationType": "OAuth2ClientCredential"
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
