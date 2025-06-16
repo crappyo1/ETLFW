@@ -75,14 +75,6 @@
 			"type": "string",
 			"defaultValue": "@{linkedService().un}"
 		},
-		"ls_adls_bronze_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
-		},
-		"ls_adls_metadata_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
-		},
 		"dls_asql_source_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "as1src.database.windows.net"
@@ -94,6 +86,14 @@
 		"dls_asql_source_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "@{linkedService().un}"
+		},
+		"ls_adls_bronze_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"ls_adls_metadata_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
 		}
 	},
 	"variables": {
@@ -1419,7 +1419,7 @@
 									"type": "ExecutePipeline",
 									"dependsOn": [
 										{
-											"activity": "act_get_objects",
+											"activity": "act_get_datasets",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -1456,15 +1456,15 @@
 												"value": "@pipeline().parameters.datalinks",
 												"type": "Expression"
 											},
-											"objects": {
-												"value": "@activity('act_get_objects').output.value",
+											"datasets": {
+												"value": "@activity('act_get_datasets').output.value",
 												"type": "Expression"
 											}
 										}
 									}
 								},
 								{
-									"name": "act_get_objects",
+									"name": "act_get_datasets",
 									"type": "Lookup",
 									"dependsOn": [],
 									"policy": {
@@ -1496,7 +1496,7 @@
 													"type": "Expression"
 												},
 												"path": {
-													"value": "@concat(pipeline().parameters.metadataPath,'/object')",
+													"value": "@concat(pipeline().parameters.metadataPath,'/dataset')",
 													"type": "Expression"
 												},
 												"configName": {
@@ -1629,7 +1629,7 @@
 						}
 					},
 					{
-						"name": "act_ingest_object",
+						"name": "act_ingest_dataset",
 						"type": "Copy",
 						"dependsOn": [
 							{
@@ -1651,13 +1651,13 @@
 								]
 							},
 							{
-								"activity": "act_filter_source_object",
+								"activity": "act_filter_source_dataset",
 								"dependencyConditions": [
 									"Succeeded"
 								]
 							},
 							{
-								"activity": "act_filter_sink_object",
+								"activity": "act_filter_sink_dataset",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -1679,6 +1679,10 @@
 							},
 							"sink": {
 								"type": "AzureSqlSink",
+								"maxConcurrentConnections": {
+									"value": "@pipeline().parameters.maxConcurrentTasks",
+									"type": "Expression"
+								},
 								"writeBehavior": "insert",
 								"sqlWriterUseTableLock": false,
 								"tableOption": "autoCreate",
@@ -1695,28 +1699,12 @@
 								"referenceName": "dds_asql_Source",
 								"type": "DatasetReference",
 								"parameters": {
-									"schemaName": {
-										"value": "@activity('act_filter_source_object').output.value[0].schemaName",
+									"dataset": {
+										"value": "@activity('act_filter_source_dataset').output.value[0]",
 										"type": "Expression"
 									},
-									"objectName": {
-										"value": "@activity('act_filter_source_object').output.value[0].objectName",
-										"type": "Expression"
-									},
-									"serverName": {
-										"value": "@activity('act_filter_source_datalink').output.value[0].uri",
-										"type": "Expression"
-									},
-									"databaseName": {
-										"value": "@activity('act_filter_source_datalink').output.value[0].catalog",
-										"type": "Expression"
-									},
-									"un": {
-										"value": "@activity('act_filter_source_datalink').output.value[0].un",
-										"type": "Expression"
-									},
-									"up": {
-										"value": "@activity('act_filter_source_datalink').output.value[0].up",
+									"datalink": {
+										"value": "@activity('act_filter_source_datalink').output.value[0]",
 										"type": "Expression"
 									}
 								}
@@ -1727,28 +1715,12 @@
 								"referenceName": "dds_asql_Bronze",
 								"type": "DatasetReference",
 								"parameters": {
-									"schemaName": {
-										"value": "@activity('act_filter_sink_object').output.value[0].schemaName",
+									"dataset": {
+										"value": "@activity('act_filter_sink_dataset').output.value[0]",
 										"type": "Expression"
 									},
-									"objectName": {
-										"value": "@activity('act_filter_sink_object').output.value[0].objectName",
-										"type": "Expression"
-									},
-									"serverName": {
-										"value": "@activity('act_filter_sink_datalink').output.value[0].uri",
-										"type": "Expression"
-									},
-									"databaseName": {
-										"value": "@activity('act_filter_sink_datalink').output.value[0].catalog",
-										"type": "Expression"
-									},
-									"un": {
-										"value": "@activity('act_filter_sink_datalink').output.value[0].un",
-										"type": "Expression"
-									},
-									"up": {
-										"value": "@activity('act_filter_sink_datalink').output.value[0].up",
+									"datalink": {
+										"value": "@activity('act_filter_sink_datalink').output.value[0]",
 										"type": "Expression"
 									}
 								}
@@ -1756,33 +1728,33 @@
 						]
 					},
 					{
-						"name": "act_filter_source_object",
+						"name": "act_filter_source_dataset",
 						"type": "Filter",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@pipeline().parameters.objects",
+								"value": "@pipeline().parameters.datasets",
 								"type": "Expression"
 							},
 							"condition": {
-								"value": "@equals(item().objectId, pipeline().parameters.taskToProcess.sourceObjectId)",
+								"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sourceDatasetId)",
 								"type": "Expression"
 							}
 						}
 					},
 					{
-						"name": "act_filter_sink_object",
+						"name": "act_filter_sink_dataset",
 						"type": "Filter",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@pipeline().parameters.objects",
+								"value": "@pipeline().parameters.datasets",
 								"type": "Expression"
 							},
 							"condition": {
-								"value": "@equals(item().objectId, pipeline().parameters.taskToProcess.sinkObjectId)",
+								"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sinkDatasetId)",
 								"type": "Expression"
 							}
 						}
@@ -1810,7 +1782,7 @@
 					"datalinks": {
 						"type": "array"
 					},
-					"objects": {
+					"datasets": {
 						"type": "array"
 					}
 				},
@@ -1859,41 +1831,29 @@
 					"type": "LinkedServiceReference",
 					"parameters": {
 						"serverName": {
-							"value": "@dataset().serverName",
+							"value": "@dataset().datalink.uri",
 							"type": "Expression"
 						},
 						"databaseName": {
-							"value": "@dataset().databaseName",
+							"value": "@dataset().datalink.catalog",
 							"type": "Expression"
 						},
 						"un": {
-							"value": "@dataset().un",
+							"value": "@dataset().datalink.un",
 							"type": "Expression"
 						},
 						"up": {
-							"value": "@dataset().up",
+							"value": "@dataset().datalink.up",
 							"type": "Expression"
 						}
 					}
 				},
 				"parameters": {
-					"schemaName": {
-						"type": "String"
+					"dataset": {
+						"type": "object"
 					},
-					"objectName": {
-						"type": "String"
-					},
-					"serverName": {
-						"type": "string"
-					},
-					"databaseName": {
-						"type": "string"
-					},
-					"un": {
-						"type": "string"
-					},
-					"up": {
-						"type": "string"
+					"datalink": {
+						"type": "object"
 					}
 				},
 				"folder": {
@@ -1904,11 +1864,11 @@
 				"schema": [],
 				"typeProperties": {
 					"schema": {
-						"value": "@dataset().schemaName",
+						"value": "@dataset().dataset.schemaName",
 						"type": "Expression"
 					},
 					"table": {
-						"value": "@dataset().objectName",
+						"value": "@dataset().dataset.objectName",
 						"type": "Expression"
 					}
 				}
@@ -1926,42 +1886,30 @@
 					"referenceName": "dls_asql_source",
 					"type": "LinkedServiceReference",
 					"parameters": {
-						"serverName": {
-							"value": "@dataset().serverName",
+						"uri": {
+							"value": "@dataset().datalink.uri",
 							"type": "Expression"
 						},
-						"databaseName": {
-							"value": "@dataset().databaseName",
+						"catalog": {
+							"value": "@dataset().datalink.catalog",
 							"type": "Expression"
 						},
 						"un": {
-							"value": "@dataset().un",
+							"value": "@dataset().datalink.un",
 							"type": "Expression"
 						},
 						"up": {
-							"value": "@dataset().up",
+							"value": "@dataset().datalink.up",
 							"type": "Expression"
 						}
 					}
 				},
 				"parameters": {
-					"schemaName": {
-						"type": "string"
+					"dataset": {
+						"type": "object"
 					},
-					"objectName": {
-						"type": "string"
-					},
-					"serverName": {
-						"type": "string"
-					},
-					"databaseName": {
-						"type": "string"
-					},
-					"un": {
-						"type": "string"
-					},
-					"up": {
-						"type": "string"
+					"datalink": {
+						"type": "object"
 					}
 				},
 				"folder": {
@@ -1972,11 +1920,11 @@
 				"schema": [],
 				"typeProperties": {
 					"schema": {
-						"value": "@dataset().schemaName",
+						"value": "@dataset().dataset.schemaName",
 						"type": "Expression"
 					},
 					"table": {
-						"value": "@dataset().objectName",
+						"value": "@dataset().dataset.objectName",
 						"type": "Expression"
 					}
 				}
@@ -2227,6 +2175,45 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/dls_asql_source')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"uri": {
+						"type": "string"
+					},
+					"catalog": {
+						"type": "string"
+					},
+					"un": {
+						"type": "string"
+					},
+					"up": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('dls_asql_source_properties_typeProperties_server')]",
+					"database": "[parameters('dls_asql_source_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('dls_asql_source_properties_typeProperties_userName')]",
+					"password": "@{linkedService().up}"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_adls_bronze')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -2303,45 +2290,6 @@
 			"apiVersion": "2018-06-01",
 			"properties": {},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dls_asql_source')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"serverName": {
-						"type": "string"
-					},
-					"databaseName": {
-						"type": "string"
-					},
-					"un": {
-						"type": "string"
-					},
-					"up": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"server": "[parameters('dls_asql_source_properties_typeProperties_server')]",
-					"database": "[parameters('dls_asql_source_properties_typeProperties_database')]",
-					"encrypt": "mandatory",
-					"trustServerCertificate": false,
-					"authenticationType": "SQL",
-					"userName": "[parameters('dls_asql_source_properties_typeProperties_userName')]",
-					"password": "@{linkedService().up}"
-				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
 		}
 	]
 }
