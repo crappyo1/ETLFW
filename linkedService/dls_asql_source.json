@@ -1,6 +1,5 @@
 {
 	"name": "dls_asql_source",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
 			"uri": {
@@ -19,17 +18,28 @@
 		"annotations": [],
 		"type": "AzureSqlDatabase",
 		"typeProperties": {
-			"server": "as1src.database.windows.net",
-			"database": "db_free_adventureworkslt",
+			"server": "@{linkedService().uri}",
+			"database": "@{linkedService().catalog}",
 			"encrypt": "mandatory",
 			"trustServerCertificate": false,
 			"authenticationType": "SQL",
 			"userName": "@{linkedService().un}",
-			"password": "@{linkedService().up}"
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_akv",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().up",
+					"type": "Expression"
+				}
+			}
 		},
 		"connectVia": {
 			"referenceName": "AutoResolveIntegrationRuntime",
 			"type": "IntegrationRuntimeReference"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }
