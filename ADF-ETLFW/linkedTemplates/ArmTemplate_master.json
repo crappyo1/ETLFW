@@ -65,11 +65,11 @@
 		},
 		"dls_asql_Bronze_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "@{linkedService().serverName}"
+			"defaultValue": "@{linkedService().uri}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "@{linkedService().databaseName}"
+			"defaultValue": "@{linkedService().catalog}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
@@ -77,11 +77,11 @@
 		},
 		"dls_asql_source_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
+			"defaultValue": "@{linkedService().uri}"
 		},
 		"dls_asql_source_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "db_free_adventureworkslt"
+			"defaultValue": "@{linkedService().catalog}"
 		},
 		"dls_asql_source_properties_typeProperties_userName": {
 			"type": "string",
@@ -94,6 +94,30 @@
 		"ls_adls_metadata_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"ls_akv_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://akv-etl-fw.vault.azure.net/"
+		},
+		"dls_salesforce_properties_typeProperties_environmentUrl": {
+			"type": "string",
+			"defaultValue": "@{linkedService().salesforceUri}"
+		},
+		"dls_salesforce_properties_typeProperties_clientId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().salseforceClientId}"
+		},
+		"dls_asql_Gold_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "@{linkedService().uri}"
+		},
+		"dls_asql_Gold_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().catalog}"
+		},
+		"dls_asql_Gold_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().un}"
 		},
 		"containerUri": {
 			"type": "string",
@@ -136,6 +160,9 @@
 					},
 					"ls_adls_metadata_accountKey": {
 						"value": "[parameters('ls_adls_metadata_accountKey')]"
+					},
+					"ls_akv_properties_typeProperties_baseUrl": {
+						"value": "[parameters('ls_akv_properties_typeProperties_baseUrl')]"
 					},
 					"AWLT_LS_properties_typeProperties_server": {
 						"value": "[parameters('AWLT_LS_properties_typeProperties_server')]"
@@ -187,6 +214,21 @@
 					},
 					"ls_adls_metadata_properties_typeProperties_url": {
 						"value": "[parameters('ls_adls_metadata_properties_typeProperties_url')]"
+					},
+					"dls_salesforce_properties_typeProperties_environmentUrl": {
+						"value": "[parameters('dls_salesforce_properties_typeProperties_environmentUrl')]"
+					},
+					"dls_salesforce_properties_typeProperties_clientId": {
+						"value": "[parameters('dls_salesforce_properties_typeProperties_clientId')]"
+					},
+					"dls_asql_Gold_properties_typeProperties_server": {
+						"value": "[parameters('dls_asql_Gold_properties_typeProperties_server')]"
+					},
+					"dls_asql_Gold_properties_typeProperties_database": {
+						"value": "[parameters('dls_asql_Gold_properties_typeProperties_database')]"
+					},
+					"dls_asql_Gold_properties_typeProperties_userName": {
+						"value": "[parameters('dls_asql_Gold_properties_typeProperties_userName')]"
 					}
 				}
 			},

@@ -48,19 +48,19 @@
 			"value": "as1src"
 		},
 		"dls_asql_Bronze_properties_typeProperties_server": {
-			"value": "@{linkedService().serverName}"
+			"value": "@{linkedService().uri}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_database": {
-			"value": "@{linkedService().databaseName}"
+			"value": "@{linkedService().catalog}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"value": "@{linkedService().un}"
 		},
 		"dls_asql_source_properties_typeProperties_server": {
-			"value": "as1src.database.windows.net"
+			"value": "@{linkedService().uri}"
 		},
 		"dls_asql_source_properties_typeProperties_database": {
-			"value": "db_free_adventureworkslt"
+			"value": "@{linkedService().catalog}"
 		},
 		"dls_asql_source_properties_typeProperties_userName": {
 			"value": "@{linkedService().un}"
@@ -70,6 +70,24 @@
 		},
 		"ls_adls_metadata_properties_typeProperties_url": {
 			"value": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"ls_akv_properties_typeProperties_baseUrl": {
+			"value": "https://akv-etl-fw.vault.azure.net/"
+		},
+		"dls_salesforce_properties_typeProperties_environmentUrl": {
+			"value": "@{linkedService().salesforceUri}"
+		},
+		"dls_salesforce_properties_typeProperties_clientId": {
+			"value": "@{linkedService().salseforceClientId}"
+		},
+		"dls_asql_Gold_properties_typeProperties_server": {
+			"value": "@{linkedService().uri}"
+		},
+		"dls_asql_Gold_properties_typeProperties_database": {
+			"value": "@{linkedService().catalog}"
+		},
+		"dls_asql_Gold_properties_typeProperties_userName": {
+			"value": "@{linkedService().un}"
 		}
 	}
 }

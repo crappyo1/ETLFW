@@ -27,6 +27,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'ls_adls_metadata'"
 		},
+		"ls_akv_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://akv-etl-fw.vault.azure.net/"
+		},
 		"AWLT_LS_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "as1src.database.windows.net"
@@ -65,11 +69,11 @@
 		},
 		"dls_asql_Bronze_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "@{linkedService().serverName}"
+			"defaultValue": "@{linkedService().uri}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "@{linkedService().databaseName}"
+			"defaultValue": "@{linkedService().catalog}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
@@ -77,11 +81,11 @@
 		},
 		"dls_asql_source_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
+			"defaultValue": "@{linkedService().uri}"
 		},
 		"dls_asql_source_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "db_free_adventureworkslt"
+			"defaultValue": "@{linkedService().catalog}"
 		},
 		"dls_asql_source_properties_typeProperties_userName": {
 			"type": "string",
@@ -94,6 +98,26 @@
 		"ls_adls_metadata_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"dls_salesforce_properties_typeProperties_environmentUrl": {
+			"type": "string",
+			"defaultValue": "@{linkedService().salesforceUri}"
+		},
+		"dls_salesforce_properties_typeProperties_clientId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().salseforceClientId}"
+		},
+		"dls_asql_Gold_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "@{linkedService().uri}"
+		},
+		"dls_asql_Gold_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().catalog}"
+		},
+		"dls_asql_Gold_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().un}"
 		}
 	},
 	"variables": {
@@ -105,6 +129,19 @@
 			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
 			"apiVersion": "2018-06-01",
 			"properties": {},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_akv')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_akv_properties_typeProperties_baseUrl')]"
+				}
+			},
 			"dependsOn": []
 		},
 		{
@@ -222,10 +259,10 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"parameters": {
-					"serverName": {
+					"uri": {
 						"type": "string"
 					},
-					"databaseName": {
+					"catalog": {
 						"type": "string"
 					},
 					"un": {
@@ -244,7 +281,17 @@
 					"trustServerCertificate": false,
 					"authenticationType": "SQL",
 					"userName": "[parameters('dls_asql_Bronze_properties_typeProperties_userName')]",
-					"password": "@{linkedService().up}"
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_akv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().up",
+							"type": "Expression"
+						}
+					}
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -252,7 +299,8 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_akv')]"
 			]
 		},
 		{
@@ -283,7 +331,17 @@
 					"trustServerCertificate": false,
 					"authenticationType": "SQL",
 					"userName": "[parameters('dls_asql_source_properties_typeProperties_userName')]",
-					"password": "@{linkedService().up}"
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_akv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().up",
+							"type": "Expression"
+						}
+					}
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -291,7 +349,8 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_akv')]"
 			]
 		},
 		{
@@ -341,6 +400,112 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/dls_salesforce')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"salesforceUri": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"salseforceClientId": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"salseforceClientS": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"salesforceApiVersion": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					}
+				},
+				"annotations": [],
+				"type": "SalesforceV2",
+				"typeProperties": {
+					"environmentUrl": "[parameters('dls_salesforce_properties_typeProperties_environmentUrl')]",
+					"clientId": "[parameters('dls_salesforce_properties_typeProperties_clientId')]",
+					"clientSecret": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_akv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().salseforceClientS",
+							"type": "Expression"
+						}
+					},
+					"apiVersion": "@{linkedService().salesforceApiVersion}",
+					"authenticationType": "OAuth2ClientCredential"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_akv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dls_asql_Gold')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"uri": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"catalog": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"un": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"up": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('dls_asql_Gold_properties_typeProperties_server')]",
+					"database": "[parameters('dls_asql_Gold_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('dls_asql_Gold_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_akv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().up",
+							"type": "Expression"
+						}
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_akv')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/MetadataDS')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -373,11 +538,11 @@
 					"referenceName": "dls_asql_Bronze",
 					"type": "LinkedServiceReference",
 					"parameters": {
-						"serverName": {
+						"uri": {
 							"value": "@dataset().datalink.uri",
 							"type": "Expression"
 						},
-						"databaseName": {
+						"catalog": {
 							"value": "@dataset().datalink.catalog",
 							"type": "Expression"
 						},
@@ -595,1309 +760,105 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Ingestion_L1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/dds_salesforce_target')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "This pipeline will copy objects from one group. The objects belonging to this group will be copied parallelly.",
-				"activities": [
-					{
-						"name": "ListObjectsFromOneGroup",
-						"description": "List objects from one group and iterate each of them to downstream activities",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().parameters.ObjectsPerGroupToCopy",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "RouteJobsBasedOnLoadingBehavior",
-									"description": "Check the loading behavior for each object if it requires full load or incremental load. If it is Default or FullLoad case, do full load. If it is DeltaLoad case, do incremental load.",
-									"type": "Switch",
-									"dependsOn": [
-										{
-											"activity": "GetObjectColumnMapping",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"on": {
-											"value": "@json(item().DataLoadingBehaviorSettings).dataLoadingBehavior",
-											"type": "Expression"
-										},
-										"cases": [
-											{
-												"value": "FullLoad",
-												"activities": [
-													{
-														"name": "FullLoadOneObject",
-														"description": "Take a full snapshot on this object and copy it to the destination",
-														"type": "Copy",
-														"dependsOn": [],
-														"policy": {
-															"timeout": "0.12:00:00",
-															"retry": 0,
-															"retryIntervalInSeconds": 30,
-															"secureOutput": false,
-															"secureInput": false
-														},
-														"userProperties": [
-															{
-																"name": "Source",
-																"value": "@{item().SourceSchemaName}.@{item().SourceObjectName}"
-															},
-															{
-																"name": "Destination",
-																"value": "@{item().SinkSchemaName}.@{item().SinkObjectName}"
-															}
-														],
-														"typeProperties": {
-															"source": {
-																"type": "AzureSqlSource",
-																"sqlReaderQuery": {
-																	"value": "@json(item().CopySourceSettings).sqlReaderQuery",
-																	"type": "Expression"
-																},
-																"isolationLevel": {
-																	"value": "@json(item().CopySourceSettings).isolationLevel",
-																	"type": "Expression"
-																},
-																"partitionOption": {
-																	"value": "@json(item().CopySourceSettings).partitionOption",
-																	"type": "Expression"
-																},
-																"partitionSettings": {
-																	"partitionColumnName": {
-																		"value": "@json(item().CopySourceSettings).partitionColumnName",
-																		"type": "Expression"
-																	},
-																	"partitionUpperBound": {
-																		"value": "@json(item().CopySourceSettings).partitionUpperBound",
-																		"type": "Expression"
-																	},
-																	"partitionLowerBound": {
-																		"value": "@json(item().CopySourceSettings).partitionLowerBound",
-																		"type": "Expression"
-																	},
-																	"partitionNames": "@json(item().CopySourceSettings).partitionNames"
-																}
-															},
-															"sink": {
-																"type": "AzureSqlSink",
-																"writeBatchSize": {
-																	"value": "@json(item().CopySinkSettings).writeBatchSize",
-																	"type": "Expression"
-																},
-																"preCopyScript": {
-																	"value": "@{json(item().CopySinkSettings).preCopyScript}",
-																	"type": "Expression"
-																},
-																"maxConcurrentConnections": {
-																	"value": "@json(item().CopySinkSettings).maxConcurrentConnections",
-																	"type": "Expression"
-																},
-																"writeBehavior": {
-																	"value": "@json(item().CopySinkSettings).writeBehavior",
-																	"type": "Expression"
-																},
-																"sqlWriterUseTableLock": {
-																	"value": "@json(item().CopySinkSettings).sqlWriterUseTableLock",
-																	"type": "Expression"
-																},
-																"upsertSettings": {
-																	"value": "@json(item().CopySinkSettings).upsertSettings",
-																	"type": "Expression"
-																},
-																"tableOption": {
-																	"value": "@{json(item().CopySinkSettings).tableOption}",
-																	"type": "Expression"
-																},
-																"disableMetricsCollection": {
-																	"value": "@json(item().CopySinkSettings).disableMetricsCollection",
-																	"type": "Expression"
-																}
-															},
-															"enableStaging": false,
-															"validateDataConsistency": false,
-															"translator": {
-																"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            ',\n            \"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
-																"type": "Expression"
-															}
-														},
-														"inputs": [
-															{
-																"referenceName": "ds_asql_Source",
-																"type": "DatasetReference",
-																"parameters": {
-																	"SchemaName": {
-																		"value": "@item().SourceSchemaName",
-																		"type": "Expression"
-																	},
-																	"ObjectName": {
-																		"value": "@item().SourceObjectName",
-																		"type": "Expression"
-																	}
-																}
-															}
-														],
-														"outputs": [
-															{
-																"referenceName": "ds_asql_Bronze",
-																"type": "DatasetReference",
-																"parameters": {
-																	"SchemaName": {
-																		"value": "@item().SinkSchemaName",
-																		"type": "Expression"
-																	},
-																	"ObjectName": {
-																		"value": "@item().SinkObjectName",
-																		"type": "Expression"
-																	}
-																}
-															}
-														]
-													}
-												]
-											},
-											{
-												"value": "DeltaLoad",
-												"activities": [
-													{
-														"name": "GetMaxWatermarkValue",
-														"description": "Query the source object to get the max value from watermark column",
-														"type": "Lookup",
-														"dependsOn": [],
-														"policy": {
-															"timeout": "0.12:00:00",
-															"retry": 0,
-															"retryIntervalInSeconds": 30,
-															"secureOutput": false,
-															"secureInput": false
-														},
-														"userProperties": [],
-														"typeProperties": {
-															"source": {
-																"type": "AzureSqlSource",
-																"sqlReaderQuery": {
-																	"value": "select max([@{json(item().DataLoadingBehaviorSettings).watermarkColumnName}]) as CurrentMaxWaterMarkColumnValue from [@{item().SourceSchemaName}].[@{item().SourceObjectName}]",
-																	"type": "Expression"
-																},
-																"partitionOption": "None"
-															},
-															"dataset": {
-																"referenceName": "ds_asql_Source",
-																"type": "DatasetReference",
-																"parameters": {
-																	"SchemaName": {
-																		"value": "@item().SourceSchemaName",
-																		"type": "Expression"
-																	},
-																	"ObjectName": {
-																		"value": "@item().SourceObjectName",
-																		"type": "Expression"
-																	}
-																}
-															}
-														}
-													},
-													{
-														"name": "DeltaLoadOneObject",
-														"description": "Copy the changed data only from last time via comparing the value in watermark column to identify changes.",
-														"type": "Copy",
-														"dependsOn": [
-															{
-																"activity": "GetMaxWatermarkValue",
-																"dependencyConditions": [
-																	"Succeeded"
-																]
-															}
-														],
-														"policy": {
-															"timeout": "0.12:00:00",
-															"retry": 0,
-															"retryIntervalInSeconds": 30,
-															"secureOutput": false,
-															"secureInput": false
-														},
-														"userProperties": [
-															{
-																"name": "Source",
-																"value": "@{item().SourceSchemaName}.@{item().SourceObjectName}"
-															},
-															{
-																"name": "Destination",
-																"value": "@{item().SinkSchemaName}.@{item().SinkObjectName}"
-															}
-														],
-														"typeProperties": {
-															"source": {
-																"type": "AzureSqlSource",
-																"sqlReaderQuery": {
-																	"value": "select * from [@{item().SourceSchemaName}].[@{item().SourceObjectName}] \n    where [@{json(item().DataLoadingBehaviorSettings).watermarkColumnName}] > @{if(contains(json(item().DataLoadingBehaviorSettings).watermarkColumnType, 'Int'),\n    json(item().DataLoadingBehaviorSettings).watermarkColumnStartValue, \n    concat('''', json(item().DataLoadingBehaviorSettings).watermarkColumnStartValue, ''''))}\n    and [@{json(item().DataLoadingBehaviorSettings).watermarkColumnName}] <= @{if(contains(json(item().DataLoadingBehaviorSettings).watermarkColumnType, 'Int'),\n    activity('GetMaxWatermarkValue').output.firstRow.CurrentMaxWaterMarkColumnValue, \n    concat('''', activity('GetMaxWatermarkValue').output.firstRow.CurrentMaxWaterMarkColumnValue, ''''))}",
-																	"type": "Expression"
-																},
-																"isolationLevel": {
-																	"value": "@{json(item().CopySourceSettings).isolationLevel}",
-																	"type": "Expression"
-																},
-																"partitionOption": {
-																	"value": "@json(item().CopySourceSettings).partitionOption",
-																	"type": "Expression"
-																},
-																"partitionSettings": {
-																	"partitionColumnName": {
-																		"value": "@{json(item().CopySourceSettings).partitionColumnName}",
-																		"type": "Expression"
-																	},
-																	"partitionUpperBound": {
-																		"value": "@{json(item().CopySourceSettings).partitionUpperBound}",
-																		"type": "Expression"
-																	},
-																	"partitionLowerBound": {
-																		"value": "@{json(item().CopySourceSettings).partitionLowerBound}",
-																		"type": "Expression"
-																	},
-																	"partitionNames": "@json(item().CopySourceSettings).partitionNames"
-																}
-															},
-															"sink": {
-																"type": "AzureSqlSink",
-																"writeBatchSize": {
-																	"value": "@json(item().CopySinkSettings).writeBatchSize",
-																	"type": "Expression"
-																},
-																"preCopyScript": {
-																	"value": "@{json(item().CopySinkSettings).preCopyScript}",
-																	"type": "Expression"
-																},
-																"maxConcurrentConnections": {
-																	"value": "@json(item().CopySinkSettings).maxConcurrentConnections",
-																	"type": "Expression"
-																},
-																"writeBehavior": {
-																	"value": "@json(item().CopySinkSettings).writeBehavior",
-																	"type": "Expression"
-																},
-																"sqlWriterUseTableLock": {
-																	"value": "@json(item().CopySinkSettings).sqlWriterUseTableLock",
-																	"type": "Expression"
-																},
-																"upsertSettings": {
-																	"value": "@json(item().CopySinkSettings).upsertSettings",
-																	"type": "Expression"
-																},
-																"tableOption": {
-																	"value": "@{json(item().CopySinkSettings).tableOption}",
-																	"type": "Expression"
-																},
-																"disableMetricsCollection": {
-																	"value": "@json(item().CopySinkSettings).disableMetricsCollection",
-																	"type": "Expression"
-																}
-															},
-															"enableStaging": false,
-															"validateDataConsistency": false,
-															"translator": {
-																"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            ',\n            \"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
-																"type": "Expression"
-															}
-														},
-														"inputs": [
-															{
-																"referenceName": "ds_asql_Source",
-																"type": "DatasetReference",
-																"parameters": {
-																	"SchemaName": "@item().SourceSchemaName",
-																	"ObjectName": {
-																		"value": "@item().SourceObjectName",
-																		"type": "Expression"
-																	}
-																}
-															}
-														],
-														"outputs": [
-															{
-																"referenceName": "ds_asql_Bronze",
-																"type": "DatasetReference",
-																"parameters": {
-																	"SchemaName": {
-																		"value": "@item().SinkSchemaName",
-																		"type": "Expression"
-																	},
-																	"ObjectName": {
-																		"value": "@item().SinkObjectName",
-																		"type": "Expression"
-																	}
-																}
-															}
-														]
-													},
-													{
-														"name": "UpdateWatermarkColumnValue",
-														"type": "SqlServerStoredProcedure",
-														"dependsOn": [
-															{
-																"activity": "DeltaLoadOneObject",
-																"dependencyConditions": [
-																	"Succeeded"
-																]
-															}
-														],
-														"policy": {
-															"timeout": "0.12:00:00",
-															"retry": 0,
-															"retryIntervalInSeconds": 30,
-															"secureOutput": false,
-															"secureInput": false
-														},
-														"userProperties": [],
-														"typeProperties": {
-															"storedProcedureName": "[[Control].[UpdateWatermarkColumnValue]",
-															"storedProcedureParameters": {
-																"Id": {
-																	"value": {
-																		"value": "@item().Id",
-																		"type": "Expression"
-																	},
-																	"type": "Int32"
-																},
-																"watermarkColumnStartValue": {
-																	"value": {
-																		"value": "@activity('GetMaxWatermarkValue').output.firstRow.CurrentMaxWaterMarkColumnValue",
-																		"type": "Expression"
-																	},
-																	"type": "String"
-																}
-															}
-														},
-														"linkedServiceName": {
-															"referenceName": "Metadata_LS",
-															"type": "LinkedServiceReference"
-														}
-													}
-												]
-											}
-										],
-										"defaultActivities": [
-											{
-												"name": "DefaultFullLoadOneObject",
-												"description": "Take a full snapshot on this object and copy it to the destination",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 0,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [
-													{
-														"name": "Source",
-														"value": "@{item().SourceSchemaName}.@{item().SourceObjectName}"
-													},
-													{
-														"name": "Destination",
-														"value": "@{item().SinkSchemaName}.@{item().SinkObjectName}"
-													}
-												],
-												"typeProperties": {
-													"source": {
-														"type": "AzureSqlSource",
-														"sqlReaderQuery": {
-															"value": "@json(item().CopySourceSettings).sqlReaderQuery",
-															"type": "Expression"
-														},
-														"isolationLevel": {
-															"value": "@json(item().CopySourceSettings).isolationLevel",
-															"type": "Expression"
-														},
-														"partitionOption": {
-															"value": "@json(item().CopySourceSettings).partitionOption",
-															"type": "Expression"
-														},
-														"partitionSettings": {
-															"partitionColumnName": {
-																"value": "@json(item().CopySourceSettings).partitionColumnName",
-																"type": "Expression"
-															},
-															"partitionUpperBound": {
-																"value": "@json(item().CopySourceSettings).partitionUpperBound",
-																"type": "Expression"
-															},
-															"partitionLowerBound": {
-																"value": "@json(item().CopySourceSettings).partitionLowerBound",
-																"type": "Expression"
-															},
-															"partitionNames": "@json(item().CopySourceSettings).partitionNames"
-														}
-													},
-													"sink": {
-														"type": "AzureSqlSink",
-														"writeBatchSize": {
-															"value": "@json(item().CopySinkSettings).writeBatchSize",
-															"type": "Expression"
-														},
-														"preCopyScript": {
-															"value": "@{json(item().CopySinkSettings).preCopyScript}",
-															"type": "Expression"
-														},
-														"maxConcurrentConnections": {
-															"value": "@json(item().CopySinkSettings).maxConcurrentConnections",
-															"type": "Expression"
-														},
-														"writeBehavior": {
-															"value": "@json(item().CopySinkSettings).writeBehavior",
-															"type": "Expression"
-														},
-														"sqlWriterUseTableLock": {
-															"value": "@json(item().CopySinkSettings).sqlWriterUseTableLock",
-															"type": "Expression"
-														},
-														"upsertSettings": {
-															"value": "@json(item().CopySinkSettings).upsertSettings",
-															"type": "Expression"
-														},
-														"tableOption": {
-															"value": "@{json(item().CopySinkSettings).tableOption}",
-															"type": "Expression"
-														},
-														"disableMetricsCollection": {
-															"value": "@json(item().CopySinkSettings).disableMetricsCollection",
-															"type": "Expression"
-														}
-													},
-													"enableStaging": false,
-													"validateDataConsistency": false,
-													"translator": {
-														"value": "@json(\n    concat(\n        '{\n            \"type\": \"TabularTranslator\",\n            \"mappings\": ',    \n            activity('GetObjectColumnMapping').output.firstRow.JSON_OUTPUT,\n            ',\n            \"typeConversion\": true,\n            \"typeConversionSettings\": {\n                \"allowDataTruncation\": true,\n                \"treatBooleanAsNumber\": false\n            }\n        }'\n    )\n)",
-														"type": "Expression"
-													}
-												},
-												"inputs": [
-													{
-														"referenceName": "ds_asql_Source",
-														"type": "DatasetReference",
-														"parameters": {
-															"SchemaName": {
-																"value": "@item().SourceSchemaName",
-																"type": "Expression"
-															},
-															"ObjectName": {
-																"value": "@item().SourceObjectName",
-																"type": "Expression"
-															}
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "ds_asql_Bronze",
-														"type": "DatasetReference",
-														"parameters": {
-															"SchemaName": "@item().SinkSchemaName",
-															"ObjectName": {
-																"value": "@item().SinkObjectName",
-																"type": "Expression"
-															}
-														}
-													}
-												]
-											}
-										]
-									}
-								},
-								{
-									"name": "InsertTaskSucceedStatus",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [
-										{
-											"activity": "RouteJobsBasedOnLoadingBehavior",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": "[[Control].[InsertTaskStatus]",
-										"storedProcedureParameters": {
-											"TaskId": {
-												"value": {
-													"value": "@item().Id",
-													"type": "Expression"
-												},
-												"type": "Int32"
-											},
-											"Status": {
-												"value": "1",
-												"type": "Int16"
-											},
-											"ErrorMessage": {
-												"value": "",
-												"type": "String"
-											}
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "Metadata_LS",
-										"type": "LinkedServiceReference"
-									}
-								},
-								{
-									"name": "InsertTaskFailStatus",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [
-										{
-											"activity": "RouteJobsBasedOnLoadingBehavior",
-											"dependencyConditions": [
-												"Failed"
-											]
-										},
-										{
-											"activity": "GetObjectColumnMapping",
-											"dependencyConditions": [
-												"Failed"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": "[[Control].[InsertTaskStatus]",
-										"storedProcedureParameters": {
-											"TaskId": {
-												"value": {
-													"value": "@item().Id",
-													"type": "Expression"
-												},
-												"type": "Int32"
-											},
-											"Status": {
-												"value": "0",
-												"type": "Int16"
-											},
-											"ErrorMessage": {
-												"value": {
-													"value": "@activity('RouteJobsBasedOnLoadingBehavior').output.value",
-													"type": "Expression"
-												},
-												"type": "String"
-											}
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "Metadata_LS",
-										"type": "LinkedServiceReference"
-									}
-								},
-								{
-									"name": "GetObjectColumnMapping",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "AzureSqlSource",
-											"sqlReaderStoredProcedureName": "[[Control].[GetColumnMapping]",
-											"storedProcedureParameters": {
-												"MappingId": {
-													"type": "Int32",
-													"value": {
-														"value": "@item().MappingId",
-														"type": "Expression"
-													}
-												}
-											},
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"dataset": {
-											"referenceName": "MetadataDS",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									}
-								}
-							]
+				"linkedServiceName": {
+					"referenceName": "dls_salesforce",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"salesforceUri": {
+							"value": "@dataset().datalink.uri",
+							"type": "Expression"
+						},
+						"salseforceClientId": {
+							"value": "@dataset().datalink.un",
+							"type": "Expression"
+						},
+						"salseforceClientS": {
+							"value": "@dataset().datalink.up",
+							"type": "Expression"
+						},
+						"salesforceApiVersion": {
+							"value": "@dataset().datalink.apiVersion",
+							"type": "Expression"
 						}
 					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"ObjectsPerGroupToCopy": {
-						"type": "Array"
-					}
-				},
-				"folder": {
-					"name": "Ingestion"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-06-07T14:15:22Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/Metadata_LS')]",
-				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
-				"[concat(variables('factoryId'), '/datasets/ds_asql_Source')]",
-				"[concat(variables('factoryId'), '/datasets/ds_asql_Bronze')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_filter_task')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "act_get_metadata",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "dds_etl_fw_metadata",
-								"type": "DatasetReference",
-								"parameters": {
-									"location": {
-										"value": "@pipeline().parameters.metadataLocation",
-										"type": "Expression"
-									},
-									"path": {
-										"value": "@pipeline().parameters.metadataPath",
-										"type": "Expression"
-									},
-									"configName": {
-										"value": "@pipeline().parameters.metadataFilename",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "act_filter_tasks",
-						"type": "Filter",
-						"dependsOn": [
-							{
-								"activity": "act_get_metadata",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('act_get_metadata').output.value",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@equals(item().type, pipeline().parameters.taskType)",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"metadataLocation": {
-						"type": "string",
-						"defaultValue": "metadata"
-					},
-					"metadataPath": {
-						"type": "string",
-						"defaultValue": "config"
-					},
-					"metadataFilename": {
-						"type": "string"
-					},
-					"taskType": {
-						"type": "string"
-					},
-					"maxConcurrentTasks": {
-						"type": "int",
-						"defaultValue": 20
-					}
-				},
-				"folder": {
-					"name": "level 1"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_process_one_ingest_task')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "act_get_object_mapping",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "dds_etl_fw_metadata",
-								"type": "DatasetReference",
-								"parameters": {
-									"location": {
-										"value": "@pipeline().parameters.metadataLocation",
-										"type": "Expression"
-									},
-									"path": {
-										"value": "@concat(pipeline().parameters.metadataPath,'/mapping')",
-										"type": "Expression"
-									},
-									"configName": {
-										"value": "@concat(pipeline().parameters.taskToProcess.mappingId, '.json')",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "act_filter_source_datalink",
-						"type": "Filter",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().parameters.datalinks",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sourceDatalinkId)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "act_filter_sink_datalink",
-						"type": "Filter",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().parameters.datalinks",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sinkDatalinkId)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "act_ingest_dataset",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "act_get_object_mapping",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "act_filter_source_datalink",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "act_filter_sink_datalink",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "act_filter_source_dataset",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "act_filter_sink_dataset",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "AzureSqlSink",
-								"maxConcurrentConnections": {
-									"value": "@pipeline().parameters.maxConcurrentTasks",
-									"type": "Expression"
-								},
-								"writeBehavior": "insert",
-								"sqlWriterUseTableLock": false,
-								"tableOption": "autoCreate",
-								"disableMetricsCollection": false
-							},
-							"enableStaging": false,
-							"translator": {
-								"value": "@json(concat('{ \n    \"type\": \"TabularTranslator\", \n    \"mappings\":',\n    string(activity('act_get_object_mapping').output.value),',\n    \"typeConversion\": true,\n    \"typeConversionSettings\": {\n        \"allowDataTruncation\": true,\n        \"treatBooleanAsNumber\": false\n    }\n}'))\n",
-								"type": "Expression"
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "dds_asql_Source",
-								"type": "DatasetReference",
-								"parameters": {
-									"dataset": {
-										"value": "@activity('act_filter_source_dataset').output.value[0]",
-										"type": "Expression"
-									},
-									"datalink": {
-										"value": "@activity('act_filter_source_datalink').output.value[0]",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "dds_asql_Bronze",
-								"type": "DatasetReference",
-								"parameters": {
-									"dataset": {
-										"value": "@activity('act_filter_sink_dataset').output.value[0]",
-										"type": "Expression"
-									},
-									"datalink": {
-										"value": "@activity('act_filter_sink_datalink').output.value[0]",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "act_filter_source_dataset",
-						"type": "Filter",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().parameters.datasets",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sourceDatasetId)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "act_filter_sink_dataset",
-						"type": "Filter",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().parameters.datasets",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sinkDatasetId)",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"metadataLocation": {
-						"type": "string",
-						"defaultValue": "metadata"
-					},
-					"metadataPath": {
-						"type": "string",
-						"defaultValue": "config"
-					},
-					"maxConcurrentTasks": {
-						"type": "string",
-						"defaultValue": "20"
-					},
-					"taskToProcess": {
+					"dataset": {
 						"type": "object"
 					},
-					"datalinks": {
-						"type": "array"
-					},
-					"datasets": {
-						"type": "array"
+					"datalink": {
+						"type": "object"
 					}
-				},
-				"folder": {
-					"name": "level 1"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]",
-				"[concat(variables('factoryId'), '/datasets/dds_asql_Source')]",
-				"[concat(variables('factoryId'), '/datasets/dds_asql_Bronze')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Ingestion_L2')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "This pipeline will copy one batch of objects. The objects belonging to this batch will be copied parallelly.",
-				"activities": [
-					{
-						"name": "DivideOneBatchIntoMultipleGroups",
-						"description": "Divide objects from single batch into multiple sub parallel groups to avoid reaching the output limit of lookup activity.",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@range(0, add(div(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                    if(equals(mod(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), 0), 0, 1)))",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 50,
-							"activities": [
-								{
-									"name": "GetObjectsPerGroupToCopy",
-									"description": "Get objects (tables etc.) from control table required to be copied in this group. The order of objects to be copied following the TaskId in control table (ORDER BY [TaskId] DESC).",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "AzureSqlSource",
-											"sqlReaderQuery": {
-												"value": "WITH OrderedControlTable AS (\n                             SELECT *, ROW_NUMBER() OVER (ORDER BY [GroupId], [Id] DESC) AS RowNumber\n                             FROM @{pipeline().parameters.MainControlTableName}\n                             where TopLevelPipelineName = '@{pipeline().parameters.TopLevelPipelineName}'\n                             and TriggerName like '%@{pipeline().parameters.TriggerName}%' and CopyEnabled = 1)\n                             SELECT * FROM OrderedControlTable WHERE RowNumber BETWEEN @{add(mul(int(item()),pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity),\n                             add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch), 1))}\n                             AND @{min(add(mul(int(item()), pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity), add(mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, pipeline().parameters.CurrentSequentialNumberOfBatch),\n                             pipeline().parameters.MaxNumberOfObjectsReturnedFromLookupActivity)),\n                            mul(pipeline().parameters.SumOfObjectsToCopyForCurrentBatch, add(pipeline().parameters.CurrentSequentialNumberOfBatch,1)), pipeline().parameters.SumOfObjectsToCopy)}",
-												"type": "Expression"
-											},
-											"partitionOption": "None"
-										},
-										"dataset": {
-											"referenceName": "MetadataDS",
-											"type": "DatasetReference",
-											"parameters": {}
-										},
-										"firstRowOnly": false
-									}
-								},
-								{
-									"name": "CopyObjectsInOneGroup",
-									"description": "Execute another pipeline to copy objects from one group. The objects belonging to this group will be copied parallelly.",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "GetObjectsPerGroupToCopy",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "Ingestion_L1",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"ObjectsPerGroupToCopy": {
-												"value": "@activity('GetObjectsPerGroupToCopy').output.value",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"MaxNumberOfObjectsReturnedFromLookupActivity": {
-						"type": "Int"
-					},
-					"TopLevelPipelineName": {
-						"type": "String"
-					},
-					"TriggerName": {
-						"type": "String"
-					},
-					"CurrentSequentialNumberOfBatch": {
-						"type": "Int"
-					},
-					"SumOfObjectsToCopy": {
-						"type": "Int"
-					},
-					"SumOfObjectsToCopyForCurrentBatch": {
-						"type": "Int"
-					},
-					"MainControlTableName": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Ingestion"
 				},
 				"annotations": [],
-				"lastPublishTime": "2025-06-07T10:12:54Z"
+				"type": "SalesforceV2Object",
+				"schema": [],
+				"typeProperties": {
+					"objectApiName": {
+						"value": "@dataset().dataset.objectName",
+						"type": "Expression"
+					}
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/MetadataDS')]",
-				"[concat(variables('factoryId'), '/pipelines/Ingestion_L1')]"
+				"[concat(variables('factoryId'), '/linkedServices/dls_salesforce')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pl_process_ingest_tasks')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/dds_asql_Gold')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"activities": [
-					{
-						"name": "act_process_each_ingest_task",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().parameters.tasksToProcess",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "act_execute_task",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "act_get_datasets",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "pl_process_one_ingest_task",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"metadataLocation": {
-												"value": "@pipeline().parameters.metadataLocation",
-												"type": "Expression"
-											},
-											"metadataPath": {
-												"value": "@pipeline().parameters.metadataPath",
-												"type": "Expression"
-											},
-											"maxConcurrentTasks": {
-												"value": "@pipeline().parameters.maxConcurrentTasks",
-												"type": "Expression"
-											},
-											"taskToProcess": {
-												"value": "@item()",
-												"type": "Expression"
-											},
-											"datalinks": {
-												"value": "@pipeline().parameters.datalinks",
-												"type": "Expression"
-											},
-											"datasets": {
-												"value": "@activity('act_get_datasets').output.value",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "act_get_datasets",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "JsonSource",
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": true,
-												"enablePartitionDiscovery": false
-											},
-											"formatSettings": {
-												"type": "JsonReadSettings"
-											}
-										},
-										"dataset": {
-											"referenceName": "dds_etl_fw_metadata",
-											"type": "DatasetReference",
-											"parameters": {
-												"location": {
-													"value": "@pipeline().parameters.metadataLocation",
-													"type": "Expression"
-												},
-												"path": {
-													"value": "@concat(pipeline().parameters.metadataPath,'/dataset')",
-													"type": "Expression"
-												},
-												"configName": {
-													"value": "ingest.json",
-													"type": "Expression"
-												}
-											}
-										},
-										"firstRowOnly": false
-									}
-								}
-							]
+				"linkedServiceName": {
+					"referenceName": "dls_asql_Gold",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"uri": {
+							"value": "@dataset().datalink.uri",
+							"type": "Expression"
+						},
+						"catalog": {
+							"value": "@dataset().datalink.catalog",
+							"type": "Expression"
+						},
+						"un": {
+							"value": "@dataset().datalink.un",
+							"type": "Expression"
+						},
+						"up": {
+							"value": "@dataset().datalink.up",
+							"type": "Expression"
 						}
 					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"metadataLocation": {
-						"type": "string",
-						"defaultValue": "metadata"
+					"dataset": {
+						"type": "object"
 					},
-					"metadataPath": {
-						"type": "string",
-						"defaultValue": "config"
-					},
-					"maxConcurrentTasks": {
-						"type": "int",
-						"defaultValue": 20
-					},
-					"tasksToProcess": {
-						"type": "array"
-					},
-					"datalinks": {
-						"type": "array"
+					"datalink": {
+						"type": "object"
 					}
 				},
-				"folder": {
-					"name": "level 1"
-				},
-				"annotations": []
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().dataset.schemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().dataset.objectName",
+						"type": "Expression"
+					}
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_process_one_ingest_task')]",
-				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+				"[concat(variables('factoryId'), '/linkedServices/dls_asql_Gold')]"
 			]
 		}
 	]

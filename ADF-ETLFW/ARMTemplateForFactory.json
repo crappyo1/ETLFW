@@ -65,11 +65,11 @@
 		},
 		"dls_asql_Bronze_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "@{linkedService().serverName}"
+			"defaultValue": "@{linkedService().uri}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "@{linkedService().databaseName}"
+			"defaultValue": "@{linkedService().catalog}"
 		},
 		"dls_asql_Bronze_properties_typeProperties_userName": {
 			"type": "string",
@@ -77,11 +77,11 @@
 		},
 		"dls_asql_source_properties_typeProperties_server": {
 			"type": "string",
-			"defaultValue": "as1src.database.windows.net"
+			"defaultValue": "@{linkedService().uri}"
 		},
 		"dls_asql_source_properties_typeProperties_database": {
 			"type": "string",
-			"defaultValue": "db_free_adventureworkslt"
+			"defaultValue": "@{linkedService().catalog}"
 		},
 		"dls_asql_source_properties_typeProperties_userName": {
 			"type": "string",
@@ -94,6 +94,30 @@
 		"ls_adls_metadata_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://sacclakehouse.dfs.core.windows.net/"
+		},
+		"ls_akv_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://akv-etl-fw.vault.azure.net/"
+		},
+		"dls_salesforce_properties_typeProperties_environmentUrl": {
+			"type": "string",
+			"defaultValue": "@{linkedService().salesforceUri}"
+		},
+		"dls_salesforce_properties_typeProperties_clientId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().salseforceClientId}"
+		},
+		"dls_asql_Gold_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "@{linkedService().uri}"
+		},
+		"dls_asql_Gold_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().catalog}"
+		},
+		"dls_asql_Gold_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().un}"
 		}
 	},
 	"variables": {
@@ -1134,7 +1158,7 @@
 					}
 				},
 				"folder": {
-					"name": "level 1"
+					"name": "core/level 001"
 				},
 				"annotations": []
 			},
@@ -1317,6 +1341,49 @@
 														}
 													}
 												]
+											},
+											{
+												"value": "load",
+												"activities": [
+													{
+														"name": "pl_process_load_tasks",
+														"type": "ExecutePipeline",
+														"dependsOn": [],
+														"policy": {
+															"secureInput": false
+														},
+														"userProperties": [],
+														"typeProperties": {
+															"pipeline": {
+																"referenceName": "pl_process_load_tasks",
+																"type": "PipelineReference"
+															},
+															"waitOnCompletion": true,
+															"parameters": {
+																"metadataLocation": {
+																	"value": "@pipeline().parameters.metadataLocation",
+																	"type": "Expression"
+																},
+																"metadataPath": {
+																	"value": "@pipeline().parameters.metadataPath",
+																	"type": "Expression"
+																},
+																"maxConcurrentTasks": {
+																	"value": "@pipeline().parameters.maxConcurrentTasks",
+																	"type": "Expression"
+																},
+																"datalinks": {
+																	"value": "@variables('datalinks')",
+																	"type": "Expression"
+																},
+																"tasksToProcess": {
+																	"value": "@activity('act_get_tasks').output.value",
+																	"type": "Expression"
+																}
+															}
+														}
+													}
+												]
 											}
 										],
 										"defaultActivities": [
@@ -1387,13 +1454,14 @@
 					}
 				},
 				"folder": {
-					"name": "top"
+					"name": "core/orchestration"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]",
-				"[concat(variables('factoryId'), '/pipelines/pl_process_ingest_tasks')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_process_ingest_tasks')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_process_load_tasks')]"
 			]
 		},
 		{
@@ -1415,7 +1483,7 @@
 							"isSequential": false,
 							"activities": [
 								{
-									"name": "act_execute_task",
+									"name": "act_execute_ingest_task",
 									"type": "ExecutePipeline",
 									"dependsOn": [
 										{
@@ -1518,11 +1586,11 @@
 				"parameters": {
 					"metadataLocation": {
 						"type": "string",
-						"defaultValue": "metadata"
+						"defaultValue": "placeholder"
 					},
 					"metadataPath": {
 						"type": "string",
-						"defaultValue": "config"
+						"defaultValue": "placeholder"
 					},
 					"maxConcurrentTasks": {
 						"type": "int",
@@ -1679,10 +1747,6 @@
 							},
 							"sink": {
 								"type": "AzureSqlSink",
-								"maxConcurrentConnections": {
-									"value": "@pipeline().parameters.maxConcurrentTasks",
-									"type": "Expression"
-								},
 								"writeBehavior": "insert",
 								"sqlWriterUseTableLock": false,
 								"tableOption": "autoCreate",
@@ -1830,11 +1894,11 @@
 					"referenceName": "dls_asql_Bronze",
 					"type": "LinkedServiceReference",
 					"parameters": {
-						"serverName": {
+						"uri": {
 							"value": "@dataset().datalink.uri",
 							"type": "Expression"
 						},
-						"databaseName": {
+						"catalog": {
 							"value": "@dataset().datalink.catalog",
 							"type": "Expression"
 						},
@@ -2141,10 +2205,10 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"parameters": {
-					"serverName": {
+					"uri": {
 						"type": "string"
 					},
-					"databaseName": {
+					"catalog": {
 						"type": "string"
 					},
 					"un": {
@@ -2163,7 +2227,17 @@
 					"trustServerCertificate": false,
 					"authenticationType": "SQL",
 					"userName": "[parameters('dls_asql_Bronze_properties_typeProperties_userName')]",
-					"password": "@{linkedService().up}"
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_akv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().up",
+							"type": "Expression"
+						}
+					}
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -2171,7 +2245,8 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_akv')]"
 			]
 		},
 		{
@@ -2202,7 +2277,17 @@
 					"trustServerCertificate": false,
 					"authenticationType": "SQL",
 					"userName": "[parameters('dls_asql_source_properties_typeProperties_userName')]",
-					"password": "@{linkedService().up}"
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_akv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().up",
+							"type": "Expression"
+						}
+					}
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -2210,7 +2295,8 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_akv')]"
 			]
 		},
 		{
@@ -2290,6 +2376,627 @@
 			"apiVersion": "2018-06-01",
 			"properties": {},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_load_object_to_salesforce')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "act_upload_to_salesforce",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "act_filter_gold_datalink",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "act_filter_target_datalink",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "act_filter_gold_dataset",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "act_filter_target_dataset",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "act_get_load_mapping",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "SalesforceV2Sink",
+								"writeBehavior": "insert",
+								"ignoreNullValues": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"value": "@json(concat('{ \n    \"type\": \"TabularTranslator\", \n    \"mappings\":',\n    string(activity('act_get_load_mapping').output.value),',\n    \"typeConversion\": true,\n    \"typeConversionSettings\": {\n        \"allowDataTruncation\": true,\n        \"treatBooleanAsNumber\": false\n    }\n}'))\n",
+								"type": "Expression"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "dds_asql_Gold",
+								"type": "DatasetReference",
+								"parameters": {
+									"dataset": {
+										"value": "@activity('act_filter_gold_dataset').output.value[0]",
+										"type": "Expression"
+									},
+									"datalink": {
+										"value": "@activity('act_filter_gold_datalink').output.value[0]",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "dds_salesforce_target",
+								"type": "DatasetReference",
+								"parameters": {
+									"dataset": {
+										"value": "@activity('act_filter_target_dataset').output.value[0]",
+										"type": "Expression"
+									},
+									"datalink": {
+										"value": "@activity('act_filter_target_datalink').output.value[0]",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "act_filter_gold_datalink",
+						"type": "Filter",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.datalinks",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sourceDatalinkId)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "act_filter_target_datalink",
+						"type": "Filter",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.datalinks",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sinkDatalinkId)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "act_filter_gold_dataset",
+						"type": "Filter",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.datasets",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sourceDatasetId)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "act_filter_target_dataset",
+						"type": "Filter",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.datasets",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sinkDatasetId)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "act_get_load_mapping",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "dds_etl_fw_metadata",
+								"type": "DatasetReference",
+								"parameters": {
+									"location": {
+										"value": "@pipeline().parameters.metadataLocation",
+										"type": "Expression"
+									},
+									"path": {
+										"value": "@concat(pipeline().parameters.metadataPath,'/mapping')",
+										"type": "Expression"
+									},
+									"configName": {
+										"value": "@concat(pipeline().parameters.taskToProcess.mappingId, '.json')",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadataLocation": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"metadataPath": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"maxConcurrentTasks": {
+						"type": "int",
+						"defaultValue": 20
+					},
+					"datalinks": {
+						"type": "array",
+						"defaultValue": []
+					},
+					"datasets": {
+						"type": "array",
+						"defaultValue": []
+					},
+					"taskToProcess": {
+						"type": "object",
+						"defaultValue": {}
+					}
+				},
+				"folder": {
+					"name": "extension/level 001"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dds_asql_Gold')]",
+				"[concat(variables('factoryId'), '/datasets/dds_salesforce_target')]",
+				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_akv')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_akv_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dls_salesforce')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"salesforceUri": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"salseforceClientId": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"salseforceClientS": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"salesforceApiVersion": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					}
+				},
+				"annotations": [],
+				"type": "SalesforceV2",
+				"typeProperties": {
+					"environmentUrl": "[parameters('dls_salesforce_properties_typeProperties_environmentUrl')]",
+					"clientId": "[parameters('dls_salesforce_properties_typeProperties_clientId')]",
+					"clientSecret": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_akv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().salseforceClientS",
+							"type": "Expression"
+						}
+					},
+					"apiVersion": "@{linkedService().salesforceApiVersion}",
+					"authenticationType": "OAuth2ClientCredential"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_akv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dds_salesforce_target')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "dls_salesforce",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"salesforceUri": {
+							"value": "@dataset().datalink.uri",
+							"type": "Expression"
+						},
+						"salseforceClientId": {
+							"value": "@dataset().datalink.un",
+							"type": "Expression"
+						},
+						"salseforceClientS": {
+							"value": "@dataset().datalink.up",
+							"type": "Expression"
+						},
+						"salesforceApiVersion": {
+							"value": "@dataset().datalink.apiVersion",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"dataset": {
+						"type": "object"
+					},
+					"datalink": {
+						"type": "object"
+					}
+				},
+				"annotations": [],
+				"type": "SalesforceV2Object",
+				"schema": [],
+				"typeProperties": {
+					"objectApiName": {
+						"value": "@dataset().dataset.objectName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/dls_salesforce')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dls_asql_Gold')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"uri": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"catalog": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"un": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"up": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('dls_asql_Gold_properties_typeProperties_server')]",
+					"database": "[parameters('dls_asql_Gold_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('dls_asql_Gold_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_akv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().up",
+							"type": "Expression"
+						}
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_akv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dds_asql_Gold')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "dls_asql_Gold",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"uri": {
+							"value": "@dataset().datalink.uri",
+							"type": "Expression"
+						},
+						"catalog": {
+							"value": "@dataset().datalink.catalog",
+							"type": "Expression"
+						},
+						"un": {
+							"value": "@dataset().datalink.un",
+							"type": "Expression"
+						},
+						"up": {
+							"value": "@dataset().datalink.up",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"dataset": {
+						"type": "object"
+					},
+					"datalink": {
+						"type": "object"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().dataset.schemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().dataset.objectName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/dls_asql_Gold')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_process_load_tasks')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "act_process_each_load_task",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.tasksToProcess",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "act_execute_load_task",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "act_get_datasets",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "pl_load_object_to_salesforce",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"metadataLocation": {
+												"value": "@pipeline().parameters.metadataLocation",
+												"type": "Expression"
+											},
+											"metadataPath": {
+												"value": "@pipeline().parameters.metadataPath",
+												"type": "Expression"
+											},
+											"maxConcurrentTasks": {
+												"value": "@pipeline().parameters.maxConcurrentTasks",
+												"type": "Expression"
+											},
+											"datalinks": {
+												"value": "@pipeline().parameters.datalinks",
+												"type": "Expression"
+											},
+											"datasets": {
+												"value": "@activity('act_get_datasets').output.value",
+												"type": "Expression"
+											},
+											"taskToProcess": {
+												"value": "@item()",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "act_get_datasets",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"dataset": {
+											"referenceName": "dds_etl_fw_metadata",
+											"type": "DatasetReference",
+											"parameters": {
+												"location": {
+													"value": "@pipeline().parameters.metadataLocation",
+													"type": "Expression"
+												},
+												"path": {
+													"value": "@concat(pipeline().parameters.metadataPath,'/dataset')",
+													"type": "Expression"
+												},
+												"configName": {
+													"value": "load.json",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": false
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadataLocation": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"metadataPath": {
+						"type": "string",
+						"defaultValue": "placeholder"
+					},
+					"maxConcurrentTasks": {
+						"type": "int",
+						"defaultValue": 20
+					},
+					"tasksToProcess": {
+						"type": "array",
+						"defaultValue": []
+					},
+					"datalinks": {
+						"type": "array",
+						"defaultValue": []
+					}
+				},
+				"folder": {
+					"name": "extension/level 001"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_load_object_to_salesforce')]",
+				"[concat(variables('factoryId'), '/datasets/dds_etl_fw_metadata')]"
+			]
 		}
 	]
 }
