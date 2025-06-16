@@ -80,7 +80,7 @@
 				}
 			},
 			{
-				"name": "act_ingest_object",
+				"name": "act_ingest_dataset",
 				"type": "Copy",
 				"dependsOn": [
 					{
@@ -102,13 +102,13 @@
 						]
 					},
 					{
-						"activity": "act_filter_source_object",
+						"activity": "act_filter_source_dataset",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					},
 					{
-						"activity": "act_filter_sink_object",
+						"activity": "act_filter_sink_dataset",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -130,6 +130,10 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
+						"maxConcurrentConnections": {
+							"value": "@pipeline().parameters.maxConcurrentTasks",
+							"type": "Expression"
+						},
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
 						"tableOption": "autoCreate",
@@ -146,28 +150,12 @@
 						"referenceName": "dds_asql_Source",
 						"type": "DatasetReference",
 						"parameters": {
-							"schemaName": {
-								"value": "@activity('act_filter_source_object').output.value[0].schemaName",
+							"dataset": {
+								"value": "@activity('act_filter_source_dataset').output.value[0]",
 								"type": "Expression"
 							},
-							"objectName": {
-								"value": "@activity('act_filter_source_object').output.value[0].objectName",
-								"type": "Expression"
-							},
-							"serverName": {
-								"value": "@activity('act_filter_source_datalink').output.value[0].uri",
-								"type": "Expression"
-							},
-							"databaseName": {
-								"value": "@activity('act_filter_source_datalink').output.value[0].catalog",
-								"type": "Expression"
-							},
-							"un": {
-								"value": "@activity('act_filter_source_datalink').output.value[0].un",
-								"type": "Expression"
-							},
-							"up": {
-								"value": "@activity('act_filter_source_datalink').output.value[0].up",
+							"datalink": {
+								"value": "@activity('act_filter_source_datalink').output.value[0]",
 								"type": "Expression"
 							}
 						}
@@ -178,28 +166,12 @@
 						"referenceName": "dds_asql_Bronze",
 						"type": "DatasetReference",
 						"parameters": {
-							"schemaName": {
-								"value": "@activity('act_filter_sink_object').output.value[0].schemaName",
+							"dataset": {
+								"value": "@activity('act_filter_sink_dataset').output.value[0]",
 								"type": "Expression"
 							},
-							"objectName": {
-								"value": "@activity('act_filter_sink_object').output.value[0].objectName",
-								"type": "Expression"
-							},
-							"serverName": {
-								"value": "@activity('act_filter_sink_datalink').output.value[0].uri",
-								"type": "Expression"
-							},
-							"databaseName": {
-								"value": "@activity('act_filter_sink_datalink').output.value[0].catalog",
-								"type": "Expression"
-							},
-							"un": {
-								"value": "@activity('act_filter_sink_datalink').output.value[0].un",
-								"type": "Expression"
-							},
-							"up": {
-								"value": "@activity('act_filter_sink_datalink').output.value[0].up",
+							"datalink": {
+								"value": "@activity('act_filter_sink_datalink').output.value[0]",
 								"type": "Expression"
 							}
 						}
@@ -207,33 +179,33 @@
 				]
 			},
 			{
-				"name": "act_filter_source_object",
+				"name": "act_filter_source_dataset",
 				"type": "Filter",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@pipeline().parameters.objects",
+						"value": "@pipeline().parameters.datasets",
 						"type": "Expression"
 					},
 					"condition": {
-						"value": "@equals(item().objectId, pipeline().parameters.taskToProcess.sourceObjectId)",
+						"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sourceDatasetId)",
 						"type": "Expression"
 					}
 				}
 			},
 			{
-				"name": "act_filter_sink_object",
+				"name": "act_filter_sink_dataset",
 				"type": "Filter",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@pipeline().parameters.objects",
+						"value": "@pipeline().parameters.datasets",
 						"type": "Expression"
 					},
 					"condition": {
-						"value": "@equals(item().objectId, pipeline().parameters.taskToProcess.sinkObjectId)",
+						"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sinkDatasetId)",
 						"type": "Expression"
 					}
 				}
@@ -258,7 +230,7 @@
 			"datalinks": {
 				"type": "array"
 			},
-			"objects": {
+			"datasets": {
 				"type": "array"
 			}
 		},

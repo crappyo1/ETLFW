@@ -6,41 +6,29 @@
 			"type": "LinkedServiceReference",
 			"parameters": {
 				"serverName": {
-					"value": "@dataset().serverName",
+					"value": "@dataset().datalink.uri",
 					"type": "Expression"
 				},
 				"databaseName": {
-					"value": "@dataset().databaseName",
+					"value": "@dataset().datalink.catalog",
 					"type": "Expression"
 				},
 				"un": {
-					"value": "@dataset().un",
+					"value": "@dataset().datalink.un",
 					"type": "Expression"
 				},
 				"up": {
-					"value": "@dataset().up",
+					"value": "@dataset().datalink.up",
 					"type": "Expression"
 				}
 			}
 		},
 		"parameters": {
-			"schemaName": {
-				"type": "String"
+			"dataset": {
+				"type": "object"
 			},
-			"objectName": {
-				"type": "String"
-			},
-			"serverName": {
-				"type": "string"
-			},
-			"databaseName": {
-				"type": "string"
-			},
-			"un": {
-				"type": "string"
-			},
-			"up": {
-				"type": "string"
+			"datalink": {
+				"type": "object"
 			}
 		},
 		"folder": {
@@ -51,11 +39,11 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": {
-				"value": "@dataset().schemaName",
+				"value": "@dataset().dataset.schemaName",
 				"type": "Expression"
 			},
 			"table": {
-				"value": "@dataset().objectName",
+				"value": "@dataset().dataset.objectName",
 				"type": "Expression"
 			}
 		}

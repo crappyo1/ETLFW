@@ -19,7 +19,7 @@
 							"type": "ExecutePipeline",
 							"dependsOn": [
 								{
-									"activity": "act_get_objects",
+									"activity": "act_get_datasets",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -56,15 +56,15 @@
 										"value": "@pipeline().parameters.datalinks",
 										"type": "Expression"
 									},
-									"objects": {
-										"value": "@activity('act_get_objects').output.value",
+									"datasets": {
+										"value": "@activity('act_get_datasets').output.value",
 										"type": "Expression"
 									}
 								}
 							}
 						},
 						{
-							"name": "act_get_objects",
+							"name": "act_get_datasets",
 							"type": "Lookup",
 							"dependsOn": [],
 							"policy": {
@@ -96,7 +96,7 @@
 											"type": "Expression"
 										},
 										"path": {
-											"value": "@concat(pipeline().parameters.metadataPath,'/object')",
+											"value": "@concat(pipeline().parameters.metadataPath,'/dataset')",
 											"type": "Expression"
 										},
 										"configName": {
