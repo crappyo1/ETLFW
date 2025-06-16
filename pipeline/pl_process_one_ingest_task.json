@@ -130,10 +130,6 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
-						"maxConcurrentConnections": {
-							"value": "@pipeline().parameters.maxConcurrentTasks",
-							"type": "Expression"
-						},
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
 						"tableOption": "autoCreate",

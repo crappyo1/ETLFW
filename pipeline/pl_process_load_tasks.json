@@ -1,9 +1,9 @@
 {
-	"name": "pl_process_ingest_tasks",
+	"name": "pl_process_load_tasks",
 	"properties": {
 		"activities": [
 			{
-				"name": "act_process_each_ingest_task",
+				"name": "act_process_each_load_task",
 				"type": "ForEach",
 				"dependsOn": [],
 				"userProperties": [],
@@ -15,7 +15,7 @@
 					"isSequential": false,
 					"activities": [
 						{
-							"name": "act_execute_ingest_task",
+							"name": "act_execute_load_task",
 							"type": "ExecutePipeline",
 							"dependsOn": [
 								{
@@ -31,7 +31,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "pl_process_one_ingest_task",
+									"referenceName": "pl_load_object_to_salesforce",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -48,16 +48,16 @@
 										"value": "@pipeline().parameters.maxConcurrentTasks",
 										"type": "Expression"
 									},
-									"taskToProcess": {
-										"value": "@item()",
-										"type": "Expression"
-									},
 									"datalinks": {
 										"value": "@pipeline().parameters.datalinks",
 										"type": "Expression"
 									},
 									"datasets": {
 										"value": "@activity('act_get_datasets').output.value",
+										"type": "Expression"
+									},
+									"taskToProcess": {
+										"value": "@item()",
 										"type": "Expression"
 									}
 								}
@@ -100,7 +100,7 @@
 											"type": "Expression"
 										},
 										"configName": {
-											"value": "ingest.json",
+											"value": "load.json",
 											"type": "Expression"
 										}
 									}
@@ -126,14 +126,16 @@
 				"defaultValue": 20
 			},
 			"tasksToProcess": {
-				"type": "array"
+				"type": "array",
+				"defaultValue": []
 			},
 			"datalinks": {
-				"type": "array"
+				"type": "array",
+				"defaultValue": []
 			}
 		},
 		"folder": {
-			"name": "level 1"
+			"name": "extension/level 001"
 		},
 		"annotations": []
 	}

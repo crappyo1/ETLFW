@@ -1,8 +1,8 @@
 {
-	"name": "dds_asql_Bronze",
+	"name": "dds_asql_Gold",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "dls_asql_Bronze",
+			"referenceName": "dls_asql_Gold",
 			"type": "LinkedServiceReference",
 			"parameters": {
 				"uri": {
@@ -31,9 +31,6 @@
 				"type": "object"
 			}
 		},
-		"folder": {
-			"name": "ETLFWDS"
-		},
 		"annotations": [],
 		"type": "AzureSqlTable",
 		"schema": [],
@@ -47,6 +44,5 @@
 				"type": "Expression"
 			}
 		}
-	},
-	"type": "Microsoft.DataFactory/factories/datasets"
+	}
 }

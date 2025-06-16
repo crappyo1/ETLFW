@@ -1,24 +1,24 @@
 {
-	"name": "dds_asql_Bronze",
+	"name": "dds_salesforce_target",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "dls_asql_Bronze",
+			"referenceName": "dls_salesforce",
 			"type": "LinkedServiceReference",
 			"parameters": {
-				"uri": {
+				"salesforceUri": {
 					"value": "@dataset().datalink.uri",
 					"type": "Expression"
 				},
-				"catalog": {
-					"value": "@dataset().datalink.catalog",
-					"type": "Expression"
-				},
-				"un": {
+				"salseforceClientId": {
 					"value": "@dataset().datalink.un",
 					"type": "Expression"
 				},
-				"up": {
+				"salseforceClientS": {
 					"value": "@dataset().datalink.up",
+					"type": "Expression"
+				},
+				"salesforceApiVersion": {
+					"value": "@dataset().datalink.apiVersion",
 					"type": "Expression"
 				}
 			}
@@ -31,22 +31,14 @@
 				"type": "object"
 			}
 		},
-		"folder": {
-			"name": "ETLFWDS"
-		},
 		"annotations": [],
-		"type": "AzureSqlTable",
+		"type": "SalesforceV2Object",
 		"schema": [],
 		"typeProperties": {
-			"schema": {
-				"value": "@dataset().dataset.schemaName",
-				"type": "Expression"
-			},
-			"table": {
+			"objectApiName": {
 				"value": "@dataset().dataset.objectName",
 				"type": "Expression"
 			}
 		}
-	},
-	"type": "Microsoft.DataFactory/factories/datasets"
+	}
 }

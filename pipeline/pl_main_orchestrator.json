@@ -171,6 +171,49 @@
 												}
 											}
 										]
+									},
+									{
+										"value": "load",
+										"activities": [
+											{
+												"name": "pl_process_load_tasks",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "pl_process_load_tasks",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"metadataLocation": {
+															"value": "@pipeline().parameters.metadataLocation",
+															"type": "Expression"
+														},
+														"metadataPath": {
+															"value": "@pipeline().parameters.metadataPath",
+															"type": "Expression"
+														},
+														"maxConcurrentTasks": {
+															"value": "@pipeline().parameters.maxConcurrentTasks",
+															"type": "Expression"
+														},
+														"datalinks": {
+															"value": "@variables('datalinks')",
+															"type": "Expression"
+														},
+														"tasksToProcess": {
+															"value": "@activity('act_get_tasks').output.value",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
 									}
 								],
 								"defaultActivities": [
@@ -238,7 +281,7 @@
 			}
 		},
 		"folder": {
-			"name": "top"
+			"name": "core/orchestration"
 		},
 		"annotations": []
 	}

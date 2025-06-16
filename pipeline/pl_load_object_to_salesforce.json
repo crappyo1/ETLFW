@@ -1,0 +1,238 @@
+{
+	"name": "pl_load_object_to_salesforce",
+	"properties": {
+		"activities": [
+			{
+				"name": "act_upload_to_salesforce",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "act_filter_gold_datalink",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "act_filter_target_datalink",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "act_filter_gold_dataset",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "act_filter_target_dataset",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "act_get_load_mapping",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "SalesforceV2Sink",
+						"writeBehavior": "insert",
+						"ignoreNullValues": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"value": "@json(concat('{ \n    \"type\": \"TabularTranslator\", \n    \"mappings\":',\n    string(activity('act_get_load_mapping').output.value),',\n    \"typeConversion\": true,\n    \"typeConversionSettings\": {\n        \"allowDataTruncation\": true,\n        \"treatBooleanAsNumber\": false\n    }\n}'))\n",
+						"type": "Expression"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "dds_asql_Gold",
+						"type": "DatasetReference",
+						"parameters": {
+							"dataset": {
+								"value": "@activity('act_filter_gold_dataset').output.value[0]",
+								"type": "Expression"
+							},
+							"datalink": {
+								"value": "@activity('act_filter_gold_datalink').output.value[0]",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dds_salesforce_target",
+						"type": "DatasetReference",
+						"parameters": {
+							"dataset": {
+								"value": "@activity('act_filter_target_dataset').output.value[0]",
+								"type": "Expression"
+							},
+							"datalink": {
+								"value": "@activity('act_filter_target_datalink').output.value[0]",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "act_filter_gold_datalink",
+				"type": "Filter",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.datalinks",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sourceDatalinkId)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "act_filter_target_datalink",
+				"type": "Filter",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.datalinks",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().datalinkId, pipeline().parameters.taskToProcess.sinkDatalinkId)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "act_filter_gold_dataset",
+				"type": "Filter",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.datasets",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sourceDatasetId)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "act_filter_target_dataset",
+				"type": "Filter",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.datasets",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().datasetId, pipeline().parameters.taskToProcess.sinkDatasetId)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "act_get_load_mapping",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "dds_etl_fw_metadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"location": {
+								"value": "@pipeline().parameters.metadataLocation",
+								"type": "Expression"
+							},
+							"path": {
+								"value": "@concat(pipeline().parameters.metadataPath,'/mapping')",
+								"type": "Expression"
+							},
+							"configName": {
+								"value": "@concat(pipeline().parameters.taskToProcess.mappingId, '.json')",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"parameters": {
+			"metadataLocation": {
+				"type": "string",
+				"defaultValue": "placeholder"
+			},
+			"metadataPath": {
+				"type": "string",
+				"defaultValue": "placeholder"
+			},
+			"maxConcurrentTasks": {
+				"type": "int",
+				"defaultValue": 20
+			},
+			"datalinks": {
+				"type": "array",
+				"defaultValue": []
+			},
+			"datasets": {
+				"type": "array",
+				"defaultValue": []
+			},
+			"taskToProcess": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "extension/level 001"
+		},
+		"annotations": []
+	}
+}
