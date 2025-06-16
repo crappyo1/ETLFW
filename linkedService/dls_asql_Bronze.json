@@ -1,12 +1,11 @@
 {
 	"name": "dls_asql_Bronze",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
-			"serverName": {
+			"uri": {
 				"type": "string"
 			},
-			"databaseName": {
+			"catalog": {
 				"type": "string"
 			},
 			"un": {
@@ -25,11 +24,22 @@
 			"trustServerCertificate": false,
 			"authenticationType": "SQL",
 			"userName": "@{linkedService().un}",
-			"password": "@{linkedService().up}"
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_akv",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().up",
+					"type": "Expression"
+				}
+			}
 		},
 		"connectVia": {
 			"referenceName": "AutoResolveIntegrationRuntime",
 			"type": "IntegrationRuntimeReference"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }
